@@ -51,7 +51,7 @@ def create_default_admin():
 # Configurar CORS para permitir que la web pública (Vercel) se conecte
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://route-master-lac.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
