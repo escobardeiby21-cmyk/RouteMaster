@@ -48,9 +48,7 @@ fun WebViewScreen() {
                     }
                 }
                 
-                // IP Especial para conectarse al "localhost" desde un emulador Android
-                // Si instalas esto en un celular real, aquí iría la IP de tu PC o tu dominio
-                loadUrl("http://10.0.2.2:5173")
+                loadUrl("https://route-master-lac.vercel.app/")
             }
         },
         modifier = Modifier.fillMaxSize()

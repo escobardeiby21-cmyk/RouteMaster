@@ -9,10 +9,15 @@ ENV PYTHONUNBUFFERED 1
 # Establecer el directorio de trabajo
 WORKDIR /app
 
-# Instalar dependencias del sistema requeridas para algunas librerías
+# Instalar dependencias del sistema requeridas para herramientas matemáticas pesadas (Ortools, Scipy)
 RUN apt-get update && apt-get install -y \
     gcc \
+    g++ \
     libpq-dev \
+    libglib2.0-0 \
+    libgomp1 \
+    libsm6 \
+    libxext6 \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar el archivo de dependencias y ejecutarlas
