@@ -80,8 +80,29 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const [trackResult, setTrackResult] = useState<any>(null);
   const [trackError, setTrackError] = useState('');
   
-  // Simulador Holográfico de SMS
-  const [showNotification, setShowNotification] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('payment') === 'success') {
+      const savedOrder = localStorage.getItem('pendingOrder');
+      if (savedOrder) {
+        const orderData = JSON.parse(savedOrder);
+        // Crear el pedido oficial tras pagar
+        api.post('/public/order', orderData).then(res => {
+          setTrackingNumber(res.data.tracking_number);
+          setPrice(res.data.price);
+          setSuccess(true);
+          localStorage.removeItem('pendingOrder');
+          setTimeout(() => setShowNotification(true), 1500);
+        }).catch(err => {
+          alert("Error guardando el pedido tras el pago.");
+        });
+      }
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (params.get('payment') === 'cancel') {
+      alert("El pago fue cancelado.");
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const getQuote = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,28 +126,37 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
-  const confirmOrder = async () => {
+  const handlePayment = async () => {
     if (!tempLat || !tempLng) return;
     setGeocoding(true);
+    const orderData = {
+      client_name: clientName,
+      address: address,
+      lat: tempLat,
+      lng: tempLng,
+      weight,
+      phone,
+      details
+    };
+    
     try {
-      const res = await api.post('/public/order', {
-        client_name: clientName,
-        address: address,
-        lat: tempLat,
-        lng: tempLng,
-        weight,
-        phone,
-        details
-      });
+      // 1. Crear sesión de pago en Stripe (o Simulador)
+      const res = await api.post('/public/create-checkout-session', orderData);
       
-      setTrackingNumber(res.data.tracking_number);
-      setPrice(res.data.price);
-      setSuccess(true);
-      
-      // Disparar la notificación futurista 1.5 segundos después
-      setTimeout(() => setShowNotification(true), 1500);
+      if (res.data.checkout_url === "simulator") {
+        // Simulador Inteligente: Procesa el pedido de inmediato
+        const finalRes = await api.post('/public/order', orderData);
+        setTrackingNumber(finalRes.data.tracking_number);
+        setPrice(finalRes.data.price);
+        setSuccess(true);
+        setTimeout(() => setShowNotification(true), 1500);
+      } else {
+        // Stripe Real: Guarda datos temporalmente y redirige a la bóveda
+        localStorage.setItem('pendingOrder', JSON.stringify(orderData));
+        window.location.href = res.data.checkout_url;
+      }
     } catch (err) {
-      alert("Hubo un error guardando el pedido.");
+      alert("Hubo un error contactando a la pasarela de pagos.");
     } finally {
       setGeocoding(false);
     }
@@ -213,8 +243,8 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
 
                 <div className="flex gap-4">
                   <button onClick={() => setQuoteData(null)} disabled={geocoding} className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold py-4 rounded-xl border border-red-500/30 transition-all">Cancelar</button>
-                  <button onClick={confirmOrder} disabled={geocoding} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2">
-                    {geocoding ? <span className="animate-pulse">Procesando...</span> : <>Aceptar y Enviar 🚀</>}
+                  <button onClick={handlePayment} disabled={geocoding} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2">
+                    {geocoding ? <span className="animate-pulse">Procesando...</span> : <>Pagar con Tarjeta 💳</>}
                   </button>
                 </div>
              </div>

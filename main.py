@@ -261,6 +261,51 @@ def quote_public_order(order: PublicOrderRequest):
         "estimated_date": estimated_date
     }
 
+import stripe
+import os
+stripe.api_key = os.getenv("STRIPE_API_KEY", "")
+
+@app.post("/public/create-checkout-session")
+def create_checkout_session(order: PublicOrderRequest):
+    """
+    Crea una sesión de pago en Stripe. 
+    Si no hay STRIPE_API_KEY configurada, activa el 'Simulador Inteligente' y aprueba el pago automáticamente.
+    """
+    DEPOT_LAT, DEPOT_LNG = 39.4699, -0.3774
+    distance_km = calculate_haversine_distance(DEPOT_LAT, DEPOT_LNG, order.lat, order.lng)
+    calculated_price = 2.0 + (order.weight * 0.1) + (distance_km * 0.05)
+    
+    # 1. MODO SIMULADOR INTELIGENTE
+    if not stripe.api_key:
+        return {
+            "checkout_url": "simulator",
+            "message": "Simulador Activado: No se requiere pago real."
+        }
+        
+    # 2. MODO PRODUCCIÓN (Stripe Real)
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=['card'],
+            line_items=[{
+                'price_data': {
+                    'currency': 'usd',
+                    'product_data': {
+                        'name': 'Envío Logístico (RouteMaster)',
+                        'description': f'Entrega a {order.address} ({order.weight} kg)',
+                    },
+                    'unit_amount': int(calculated_price * 100), # Stripe cobra en centavos
+                },
+                'quantity': 1,
+            }],
+            mode='payment',
+            # Redirige de vuelta a Vercel con el estado del pago
+            success_url="https://route-master-lac.vercel.app/?payment=success&session_id={CHECKOUT_SESSION_ID}",
+            cancel_url="https://route-master-lac.vercel.app/?payment=cancel",
+        )
+        return {"checkout_url": session.url}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @app.post("/public/order")
 def create_public_order(order: PublicOrderRequest, db: Session = Depends(get_db)):
     """Endpoint público sin JWT para que los clientes soliciten recolecciones."""
