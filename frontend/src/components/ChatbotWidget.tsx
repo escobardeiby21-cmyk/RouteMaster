@@ -4,7 +4,7 @@ import api from '../api';
 const ChatbotWidget = () => {
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState<{sender: 'user'|'bot', text: string}[]>([
-    { sender: 'bot', text: '¡Hola! Soy tu asistente virtual 👍. Pregúntame sobre envíos o escríbeme tu número de guía.' }
+    { sender: 'bot', text: '¡Hola! Soy tu asistente virtual de RouteMaster 👍. ¿En qué te puedo ayudar hoy? Si necesitas rastrear un paquete, escríbeme tu número de guía.' }
   ]);
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);

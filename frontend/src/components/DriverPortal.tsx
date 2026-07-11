@@ -4,6 +4,8 @@ import SignaturePad from 'react-signature-canvas';
 
 const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () => void }) => {
   const [route, setRoute] = useState<any>(null);
+  const [completedRoute, setCompletedRoute] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
   const [loading, setLoading] = useState(true);
   
   // POD States
@@ -17,9 +19,10 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
     const fetchRoute = async () => {
       try {
         const res = await api.get('/orders');
-        // Filtramos las paradas asignadas a este chofer específico y que NO estén entregadas
-        const orders = res.data.filter((o: any) => o.status !== 'Entregado' && o.driver?.toLowerCase() === username.toLowerCase());
-        setRoute(orders);
+        const pendingOrders = res.data.filter((o: any) => o.status !== 'Entregado' && o.driver?.toLowerCase() === username.toLowerCase());
+        const completedOrders = res.data.filter((o: any) => o.status === 'Entregado' && o.driver?.toLowerCase() === username.toLowerCase());
+        setRoute(pendingOrders);
+        setCompletedRoute(completedOrders);
       } catch(e) {}
       setLoading(false);
     };
@@ -54,6 +57,10 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
         photo: photoData
       });
       // Actualización visual instantánea
+      const deliveredOrder = route.find((o: any) => o.tracking_number === selectedOrder);
+      if (deliveredOrder) {
+        setCompletedRoute(prev => [...prev, { ...deliveredOrder, status: 'Entregado' }]);
+      }
       setRoute((prev: any) => prev.filter((o: any) => o.tracking_number !== selectedOrder));
       setShowPODModal(false);
       setSelectedOrder(null);
@@ -77,13 +84,26 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
       </div>
 
       <div className="p-4 flex-1 max-w-lg mx-auto w-full">
-        <h2 className="text-gray-400 font-bold mb-4 uppercase tracking-widest text-xs">
-          Tus Paradas Pendientes ({route?.length || 0})
-        </h2>
-        
+        {/* Tabs */}
+        <div className="flex bg-white/5 rounded-2xl p-1 border border-white/10 mb-6 backdrop-blur-sm">
+          <button 
+            onClick={() => setActiveTab('pending')}
+            className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'pending' ? 'bg-primary text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+          >
+            🚧 En Ruta ({route?.length || 0})
+          </button>
+          <button 
+            onClick={() => setActiveTab('completed')}
+            className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'completed' ? 'bg-green-500 text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
+          >
+            ✅ Completadas ({completedRoute.length})
+          </button>
+        </div>
+
         {loading ? (
           <div className="text-center text-primary mt-10 animate-pulse font-bold">📡 Conectando con el satélite...</div>
-        ) : route && route.length > 0 ? (
+        ) : activeTab === 'pending' ? (
+          route && route.length > 0 ? (
           <div className="flex flex-col gap-5">
             {route.map((order: any, idx: number) => (
               <div key={order.tracking_number} className={`bg-white/5 border border-white/10 p-5 rounded-3xl relative overflow-hidden shadow-lg ${idx === 0 ? 'ring-2 ring-primary bg-primary/5' : ''}`}>
@@ -130,6 +150,27 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
             <h3 className="text-white font-bold text-2xl mb-2">Ruta Limpia</h3>
             <p className="text-gray-400 text-sm leading-relaxed">No tienes entregas pendientes. Espera a que el Despachador optimice una nueva ruta y te la asigne.</p>
           </div>
+        )) : (
+          completedRoute.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {completedRoute.map((order: any) => (
+                <div key={order.tracking_number} className="bg-green-500/10 border border-green-500/20 p-4 rounded-2xl relative shadow-lg">
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-white font-bold">{order.client_name}</h3>
+                    <span className="text-green-400 text-xs font-bold bg-green-400/20 px-2 py-1 rounded">✅ Entregado</span>
+                  </div>
+                  <p className="text-gray-400 text-sm mb-2">{order.address}</p>
+                  <p className="text-xs text-gray-500 font-mono">Guía: {order.tracking_number}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center bg-white/5 border border-white/10 p-10 rounded-3xl mt-10 shadow-inner">
+              <div className="text-4xl mb-4">📦</div>
+              <h3 className="text-white font-bold mb-2">Aún no hay entregas</h3>
+              <p className="text-gray-400 text-sm">Tus entregas completadas de hoy aparecerán aquí como comprobante de tu trabajo.</p>
+            </div>
+          )
         )}
       </div>
 

@@ -698,6 +698,8 @@ def get_orders(db: Session = Depends(get_db)):
         "weight": s.weight,
         "phone": s.phone,
         "details": s.details,
+        "tracking_number": s.tracking_number,
+        "status": "Entregado" if s.is_delivered else "Pendiente",
         "driver": s.route.driver.name if s.route and s.route.driver else None
     } for s in stops]
 
