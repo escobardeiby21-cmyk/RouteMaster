@@ -181,11 +181,31 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-start py-12 px-4 bg-bg-main bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] relative overflow-y-auto h-screen w-full">
-      <div className="absolute inset-0 bg-gradient-to-br from-bg-main via-bg-main to-primary/10 opacity-90"></div>
+    <div className="flex-1 flex flex-col items-center justify-start py-0 px-0 md:py-12 md:px-4 bg-bg-main relative h-screen w-full overflow-hidden">
+      {/* Mapa de Fondo Global */}
+      <div className="absolute inset-0 z-0">
+        <MapContainer center={[tempLat, tempLng]} zoom={16} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+          <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
+          <LocationMarker position={{ lat: tempLat, lng: tempLng }} setPosition={(pos: any) => { setTempLat(pos.lat); setTempLng(pos.lng); }} />
+        </MapContainer>
+        <div className="absolute top-1/4 left-0 w-full flex justify-center z-[1000] pointer-events-none">
+           <div className="bg-black/60 backdrop-blur-md text-white text-xs px-4 py-2 rounded-full border border-white/10 shadow-xl">
+             Arrastra el mapa si el Pin 📍 no coincide
+           </div>
+        </div>
+      </div>
       
-      <div className="z-10 w-full max-w-lg">
-        <div className="flex bg-white/5 rounded-2xl p-1 border border-white/10 mb-8 backdrop-blur-sm">
+      {/* Botón de volver flotante (Izquierda arriba) */}
+      <button onClick={onBack} className="absolute top-4 left-4 z-50 bg-black/50 backdrop-blur-md text-white font-bold p-3 rounded-full border border-white/10 shadow-lg hover:bg-black/70 transition-colors">
+        <span className="text-xl">⬅</span>
+      </button>
+
+      {/* Contenedor Principal (Bottom Sheet en móvil, Tarjeta central en PC) */}
+      <div className="z-10 w-full max-w-lg absolute bottom-0 md:relative md:bottom-auto bg-bg-card/95 backdrop-blur-2xl md:bg-transparent md:backdrop-blur-none rounded-t-3xl md:rounded-none p-4 md:p-0 shadow-[0_-20px_40px_rgba(0,0,0,0.5)] md:shadow-none max-h-[85vh] overflow-y-auto border-t border-white/10 md:border-none pb-24 md:pb-0">
+        {/* Mango de arrastre móvil */}
+        <div className="w-12 h-1.5 bg-gray-600 rounded-full mx-auto mb-4 md:hidden"></div>
+
+        <div className="flex bg-black/40 rounded-2xl p-1 border border-white/10 mb-6 backdrop-blur-sm">
           <button 
             onClick={() => { setActiveTab('order'); setSuccess(false); }}
             className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === 'order' ? 'bg-primary text-white shadow-lg' : 'text-gray-400 hover:text-white'}`}
@@ -251,12 +271,9 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                 </div>
              </div>
           ) : (
-            <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 max-w-lg w-full">
-              <button onClick={onBack} className="w-full bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 font-bold py-4 px-4 rounded-xl border border-indigo-500/30 mb-8 flex items-center justify-center gap-3 transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] hover:-translate-y-1">
-                <span className="text-2xl">⬅</span> Volver al Menú Principal
-              </button>
-              <h1 className="text-3xl font-bold text-white mb-2">Portal de Clientes</h1>
-              <p className="text-gray-400 mb-8">Registra la dirección de entrega de tu pedido. El mapa rastreará tu ubicación en tiempo real.</p>
+            <div className="bg-transparent md:bg-white/5 md:backdrop-blur-xl md:border md:border-white/10 md:p-10 md:rounded-3xl md:shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 w-full">
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Solicitar Recolección</h1>
+              <p className="text-gray-400 mb-6 text-sm">Registra tu pedido y el chofer pasará a recogerlo.</p>
               <form onSubmit={getQuote} className="flex flex-col gap-5">
                 <div>
                   <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Tu Nombre / Empresa</label>
@@ -265,33 +282,23 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                 
                 <div>
                   <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Dirección Completa</label>
-                  <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={address} onChange={e=>setAddress(e.target.value)} placeholder="Ej. Calle Gran Vía 15, Requena, Valencia" />
+                  <input required className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors shadow-inner" value={address} onChange={e=>setAddress(e.target.value)} placeholder="Ej. Calle Gran Vía 15..." />
                 </div>
                 
-                {/* Mapa Interactivo Inline */}
-                <div className="h-48 w-full rounded-xl overflow-hidden border border-white/20 relative z-0 shadow-inner">
-                  <MapContainer center={[tempLat, tempLng]} zoom={16} style={{ height: '100%', width: '100%' }}>
-                    <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
-                    <LocationMarker position={{ lat: tempLat, lng: tempLng }} setPosition={(pos: any) => { setTempLat(pos.lat); setTempLng(pos.lng); }} />
-                  </MapContainer>
-                  <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-md text-white text-xs p-2 rounded-lg z-[1000] text-center border border-white/10 pointer-events-none">
-                    Arrastra el mapa si el Pin 📍 no coincide con tu casa
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Peso (kg)</label>
+                    <input required type="number" min="1" className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors shadow-inner" value={weight} onChange={e=>setWeight(parseInt(e.target.value) || 0)} />
+                  </div>
+                  <div>
+                    <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Teléfono</label>
+                    <input required type="tel" className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors shadow-inner" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Ej. 614 46 04 67" />
                   </div>
                 </div>
                 
                 <div>
-                  <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Peso (kg)</label>
-                  <input required type="number" min="1" className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={weight} onChange={e=>setWeight(parseInt(e.target.value) || 0)} />
-                </div>
-                
-                <div>
-                  <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Piso, Puerta o Indicaciones Extras</label>
-                  <input className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={details} onChange={e=>setDetails(e.target.value)} placeholder="Ej. Piso 3. Dejar en recepción." />
-                </div>
-
-                <div>
-                  <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Teléfono de Contacto</label>
-                  <input required type="tel" className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Ej. 614 46 04 67" />
+                  <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Piso, Puerta o Indicaciones</label>
+                  <input className="w-full px-4 py-3 bg-black/30 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors shadow-inner" value={details} onChange={e=>setDetails(e.target.value)} placeholder="Ej. Piso 3. Dejar en recepción." />
                 </div>
                 <button type="submit" disabled={geocoding} className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-medium py-4 mt-2 rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all flex justify-center items-center">
                   {geocoding ? <span className="animate-pulse">Calculando cotización...</span> : "Cotizar Envío"}
@@ -300,8 +307,8 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
             </div>
           )
         ) : (
-          <div className="bg-white/5 p-8 rounded-3xl border border-white/10 shadow-2xl backdrop-blur-md">
-            <div className="text-center mb-8">
+          <div className="bg-transparent md:bg-white/5 md:p-8 md:rounded-3xl md:border md:border-white/10 md:shadow-2xl md:backdrop-blur-md">
+            <div className="text-center mb-6">
               <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-3xl mx-auto flex items-center justify-center text-4xl shadow-[0_0_30px_rgba(99,102,241,0.4)] mb-6">📍</div>
               <h2 className="text-3xl font-bold mb-2 text-white">Rastreo Satelital</h2>
               <p className="text-gray-400">Ingresa tu número de guía para conocer el estado y costo de tu envío.</p>
