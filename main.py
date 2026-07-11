@@ -790,10 +790,19 @@ def public_chat(request: PublicChatRequest, db: Session = Depends(get_db)):
     if "ADIOS" in message or "ADIÓS" in message or "CHAO" in message or "HASTA LUEGO" in message:
         return {"response": "¡Hasta pronto! Recuerda que en RouteMaster tu carga siempre está segura. Vuelve cuando necesites hacer otro envío. 👋"}
 
+    if "POLITICA" in message or "POLÍTICA" in message or "PRIVACIDAD" in message or "SEGURO" in message:
+        return {"response": "🔒 **Privacidad y Seguridad:** En RouteMaster todos tus datos están encriptados en servidores de grado militar. No compartimos tu información con terceros y tus paquetes viajan asegurados contra daños."}
+        
+    if "REGLA" in message or "PROHIBIDO" in message or "PUEDO ENVIAR" in message:
+        return {"response": "🚫 **Reglas de Envío:** No transportamos materiales explosivos, líquidos inflamables, armas, ni sustancias ilegales. Mascotas y dinero en efectivo tampoco están permitidos por seguridad de nuestros choferes."}
+        
+    if "HORARIO" in message or "HORA" in message or "ABREN" in message:
+        return {"response": "⏰ **Horarios de Atención:** Nuestros camiones operan de Lunes a Sábado de 8:00 AM a 6:00 PM. ¡Pero yo (el sistema de rastreo) trabajo 24/7 para ti!"}
+
     if "CUANDO" in message or "LLEGA" in message or "TIEMPO" in message or "FECHA" in message:
         return {"response": "Para decirte la fecha exacta en la que llega tu envío, necesito tu número de guía (ej. RM-1234). ¡Escríbelo y te daré todos los detalles!"}
         
     if "HOLA" in message or "BUENOS DÍAS" in message or "BUENAS TARDES" in message:
-        return {"response": "¡Hola! Soy el asistente de IA de RouteMaster 👍. Si quieres saber cuándo llega tu paquete, escríbeme tu número de guía (ej. RM-1234)."}
+        return {"response": "¡Hola! Soy el asistente de IA de RouteMaster 👍. Puedes preguntarme por nuestras políticas de envío, o si quieres rastrear un paquete, solo escríbeme tu número de guía (ej. RM-1234)."}
     
-    return {"response": "No logré entenderte del todo. Para rastrear un envío o saber la fecha de entrega, por favor envíame tu número de guía (que empieza por 'RM-')."}
+    return {"response": "No logré entenderte del todo. Puedes preguntarme sobre nuestras reglas de envío, políticas de privacidad, o para rastrear un paquete simplemente envíame tu número de guía (ej. 'RM-1234')."}

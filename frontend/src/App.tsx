@@ -7,6 +7,7 @@ import AnalyticsBar from './components/AnalyticsBar';
 import ClientPortal from './components/ClientPortal';
 import LoginScreen from './components/LoginScreen';
 import DriverPortal from './components/DriverPortal';
+import ChatbotWidget from './components/ChatbotWidget';
 import 'leaflet/dist/leaflet.css';
 
 function App() {
@@ -118,6 +119,7 @@ function App() {
             <p className="text-sm md:text-base text-blue-200">Solicitar recolección de un paquete a domicilio.</p>
           </button>
         </div>
+        <ChatbotWidget />
       </div>
     );
   }
@@ -131,7 +133,12 @@ function App() {
   }
 
   if (userRole === 'guest') {
-    return <ClientPortal onBack={() => setUserRole(null)} />;
+    return (
+      <>
+        <ClientPortal onBack={() => setUserRole(null)} />
+        <ChatbotWidget />
+      </>
+    );
   }
 
   return (
