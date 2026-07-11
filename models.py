@@ -14,6 +14,9 @@ class Driver(Base):
     __tablename__ = "drivers"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
+    pin = Column(String, nullable=True, default="1234")
+    avatar_url = Column(String, nullable=True)
+    total_deliveries = Column(Integer, default=0)
     phone = Column(String, nullable=True)
     vehicle_plate = Column(String, nullable=True)
     emergency_contact = Column(String, nullable=True)
@@ -45,6 +48,7 @@ class DeliveryStop(Base):
     # Nuevos campos empresariales
     tracking_number = Column(String, unique=True, index=True, nullable=True)
     price = Column(Float, default=0.0)
+    payment_method = Column(String, default="card") # 'card' or 'cash'
     signature_data = Column(String, nullable=True) # Base64 Image
     photo_data = Column(String, nullable=True) # Base64 Image
     

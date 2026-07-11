@@ -177,20 +177,23 @@ function App() {
             </div>
           )}
 
-          <button  
-          onClick={() => setUserRole('login')}
-          className="flex-1 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 p-10 rounded-3xl transition-all shadow-xl group"
-        >
-          <div className="w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto group-hover:scale-110 transition-transform shadow-[0_0_30px_rgba(99,102,241,0.5)]">
-            🛡️
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Personal Autorizado</h2>
-          <p className="text-gray-400 text-sm">Acceso exclusivo para Administradores y Choferes de la flota.</p>
-        </button>
-          <button onClick={() => setUserRole('guest')} className="p-8 bg-primary/20 border border-primary/30 rounded-3xl hover:bg-primary/30 transition-all shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:-translate-y-2 text-center w-72 md:w-80 backdrop-blur-sm">
-            <div className="text-5xl md:text-6xl mb-4">📦</div>
+        <div className="flex flex-col md:flex-row gap-6 mt-12 relative z-10 w-full max-w-4xl justify-center items-center px-4">
+          <button onClick={() => setUserRole('guest')} className="flex-1 w-full p-8 bg-primary/20 border border-primary/30 rounded-3xl hover:bg-primary/30 transition-all shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:-translate-y-2 text-center backdrop-blur-sm group">
+            <div className="text-5xl md:text-6xl mb-4 group-hover:scale-110 transition-transform">📦</div>
             <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Soy Cliente</h2>
-            <p className="text-sm md:text-base text-blue-200">Solicitar recolección de un paquete a domicilio.</p>
+            <p className="text-sm text-blue-200">Cotizar y enviar un paquete.</p>
+          </button>
+          
+          <button onClick={() => setUserRole('driver')} className="flex-1 w-full p-8 bg-emerald-500/20 border border-emerald-500/30 rounded-3xl hover:bg-emerald-500/30 transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:-translate-y-2 text-center backdrop-blur-sm group">
+            <div className="text-5xl md:text-6xl mb-4 group-hover:scale-110 transition-transform">🚚</div>
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Soy Chofer</h2>
+            <p className="text-sm text-emerald-200">Ver mis entregas asignadas.</p>
+          </button>
+
+          <button onClick={() => setUserRole('login')} className="flex-1 w-full p-8 bg-white/5 border border-white/10 rounded-3xl hover:bg-white/10 transition-all shadow-xl hover:-translate-y-2 text-center backdrop-blur-sm group">
+            <div className="text-5xl md:text-6xl mb-4 group-hover:scale-110 transition-transform">🛡️</div>
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Administración</h2>
+            <p className="text-sm text-gray-400">Torre de control central.</p>
           </button>
         </div>
         <ChatbotWidget />

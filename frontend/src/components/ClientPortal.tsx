@@ -164,6 +164,33 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
     }
   };
 
+  const handleCashPayment = async () => {
+    if (!tempLat || !tempLng) return;
+    setGeocoding(true);
+    const orderData = {
+      client_name: clientName,
+      address: address,
+      lat: tempLat,
+      lng: tempLng,
+      weight,
+      phone,
+      details,
+      payment_method: 'cash'
+    };
+    
+    try {
+      const finalRes = await api.post('/public/order', orderData);
+      setTrackingNumber(finalRes.data.tracking_number);
+      setPrice(finalRes.data.price);
+      setSuccess(true);
+      setTimeout(() => setShowNotification(true), 1500);
+    } catch (err) {
+      alert("Hubo un error procesando su pedido en efectivo.");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
   const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
     setTrackError('');
@@ -243,11 +270,14 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <button onClick={() => setQuoteData(null)} disabled={geocoding} className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold py-4 rounded-xl border border-red-500/30 transition-all">Cancelar</button>
-                  <button onClick={handlePayment} disabled={geocoding} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2">
-                    {geocoding ? <span className="animate-pulse">Procesando...</span> : <>Pagar con Tarjeta 💳</>}
+                <div className="flex flex-col gap-3">
+                  <button onClick={handlePayment} disabled={geocoding} className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2">
+                    {geocoding ? <span className="animate-pulse">Procesando...</span> : <>💳 Pagar Ahora con Tarjeta</>}
                   </button>
+                  <button onClick={handleCashPayment} disabled={geocoding} className="w-full bg-blue-600/20 hover:bg-blue-600/40 text-blue-300 font-bold py-4 rounded-xl border border-blue-500/30 transition-all flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(37,99,235,0.2)]">
+                    {geocoding ? <span className="animate-pulse">Procesando...</span> : <>💵 Pagar al Entregar (Efectivo)</>}
+                  </button>
+                  <button onClick={() => setQuoteData(null)} disabled={geocoding} className="w-full mt-2 bg-transparent text-gray-500 font-bold py-2 hover:text-white transition-colors">Cancelar Cotización</button>
                 </div>
              </div>
           ) : (

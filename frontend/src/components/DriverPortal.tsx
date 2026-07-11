@@ -24,11 +24,15 @@ const MapUpdater = ({ center }: { center: {lat: number, lng: number} }) => {
   return null;
 };
 
-const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () => void }) => {
+const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () => void }) => {
+  const [driverProfile, setDriverProfile] = useState<any>(null);
+  const [pin, setPin] = useState('');
+  const [loginError, setLoginError] = useState('');
+  
   const [route, setRoute] = useState<any>(null);
   const [completedRoute, setCompletedRoute] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Initially false because they must login first
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
 
   useEffect(() => {
@@ -51,22 +55,34 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
   const sigCanvas = useRef<any>(null);
   const fileInputRef = useRef<any>(null);
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    try {
+      const res = await api.post('/driver/login', { pin });
+      setDriverProfile(res.data);
+      setLoading(true);
+    } catch (err) {
+      setLoginError("PIN incorrecto o acceso denegado.");
+    }
+  };
+
   useEffect(() => {
     const fetchRoute = async () => {
+      if (!driverProfile) return;
       try {
         const res = await api.get('/orders');
-        const pendingOrders = res.data.filter((o: any) => o.status !== 'Entregado' && o.driver?.toLowerCase() === username.toLowerCase());
-        const completedOrders = res.data.filter((o: any) => o.status === 'Entregado' && o.driver?.toLowerCase() === username.toLowerCase());
+        const pendingOrders = res.data.filter((o: any) => o.status !== 'Entregado' && o.driver?.toLowerCase() === driverProfile.name.toLowerCase());
+        const completedOrders = res.data.filter((o: any) => o.status === 'Entregado' && o.driver?.toLowerCase() === driverProfile.name.toLowerCase());
         setRoute(pendingOrders);
         setCompletedRoute(completedOrders);
       } catch(e) {}
       setLoading(false);
     };
     fetchRoute();
-    // Refrescar cada 10 segundos por si el Admin le asigna nuevas rutas en tiempo real
     const int = setInterval(fetchRoute, 10000);
     return () => clearInterval(int);
-  }, [username]);
+  }, [driverProfile]);
 
   const handlePhotoCapture = (e: any) => {
     const file = e.target.files[0];
@@ -106,19 +122,46 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
     }
   };
 
+  if (!driverProfile) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-4 bg-bg-main min-h-screen relative">
+        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-900/20 to-bg-main opacity-80"></div>
+        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 w-full max-w-sm text-center">
+          <button onClick={onLogout} className="text-gray-400 hover:text-white mb-6 text-sm flex items-center gap-2 transition-colors mx-auto">← Volver</button>
+          <div className="text-6xl mb-4">🚚</div>
+          <h2 className="text-2xl font-bold text-white mb-2">Bóveda de Choferes</h2>
+          <p className="text-gray-400 text-sm mb-8">Ingresa tu PIN de 4 dígitos para acceder a tus rutas y perfil.</p>
+          <form onSubmit={handleLogin}>
+            <input required type="password" maxLength={4} className="w-full text-center text-4xl tracking-[1em] px-4 py-4 bg-black/50 border border-white/20 rounded-2xl text-emerald-400 outline-none focus:border-emerald-500 transition-colors mb-4 font-mono shadow-inner" value={pin} onChange={e=>setPin(e.target.value)} placeholder="••••" />
+            {loginError && <div className="text-red-400 text-xs bg-red-500/10 p-2 rounded mb-4">{loginError}</div>}
+            <button type="submit" className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all">Desbloquear</button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-bg-main flex flex-col font-sans pb-20">
-      {/* Header Estilo App Móvil */}
+      {/* Header Estilo App Móvil con Perfil */}
       <div className="bg-white/10 p-5 border-b border-white/10 sticky top-0 z-50 shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-xl flex justify-between items-center">
         <div className="flex items-center gap-4">
-          <div className="text-right">
-            <h1 className="text-white font-bold text-xl flex items-center justify-end gap-2">🚚 {username}</h1>
-            <p className="text-emerald-400 text-xs font-mono uppercase tracking-widest">{route?.length || 0} Pendientes | {completedRoute.length} Hechas</p>
+          {driverProfile.avatar_url ? (
+            <img src={driverProfile.avatar_url} className="w-12 h-12 rounded-full border-2 border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] object-cover" alt="Avatar"/>
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-xl shadow-[0_0_15px_rgba(16,185,129,0.5)]">👨‍✈️</div>
+          )}
+          <div className="text-left">
+            <h1 className="text-white font-bold text-xl">{driverProfile.name}</h1>
+            <p className="text-emerald-400 text-xs font-mono uppercase tracking-widest flex flex-col">
+              <span>⭐ {driverProfile.total_deliveries + completedRoute.length} Entregas Globales</span>
+              <span>📦 {route?.length || 0} Pendientes</span>
+            </p>
           </div>
-          <button onClick={onLogout} className="text-red-400 text-xs font-bold uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-xl border border-red-500/30 transition-colors h-fit">
-            Salir
-          </button>
         </div>
+        <button onClick={() => setDriverProfile(null)} className="text-red-400 text-xs font-bold uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-xl border border-red-500/30 transition-colors h-fit">
+          Salir
+        </button>
       </div>
 
       <div className="p-4 flex-1 max-w-lg mx-auto w-full">
@@ -195,6 +238,16 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
                   <div className="bg-orange-500/10 border border-orange-500/20 text-orange-300 text-xs p-3 rounded-xl mb-5">
                     <strong className="block mb-1">Indicaciones extra:</strong>
                     {order.details}
+                  </div>
+                )}
+                
+                {order.payment_method === 'cash' && (
+                  <div className="bg-red-500/20 border border-red-500 text-red-100 text-sm p-4 rounded-xl mb-5 shadow-[0_0_15px_rgba(239,68,68,0.5)] flex items-center gap-3 animate-pulse">
+                    <span className="text-3xl">💵</span>
+                    <div>
+                      <strong className="block font-black uppercase tracking-wider">¡Cobrar Efectivo!</strong>
+                      Debes recolectar <strong>${order.price?.toFixed(2)}</strong> antes de entregar el paquete.
+                    </div>
                   </div>
                 )}
                 

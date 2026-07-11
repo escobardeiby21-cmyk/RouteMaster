@@ -47,6 +47,18 @@ def create_default_admin():
         )
         db.add(new_admin)
         db.commit()
+        
+    driver1 = db.query(models.Driver).filter(models.Driver.name == "Deiby (Admin)").first()
+    if not driver1:
+        new_d1 = models.Driver(name="Deiby (Admin)", pin="0000", total_deliveries=42)
+        db.add(new_d1)
+        
+    driver2 = db.query(models.Driver).filter(models.Driver.name == "Carlos Rápido").first()
+    if not driver2:
+        new_d2 = models.Driver(name="Carlos Rápido", pin="1234", total_deliveries=15)
+        db.add(new_d2)
+        
+    db.commit()
 
 # Configurar CORS para permitir que la web pública (Vercel) se conecte
 app.add_middleware(
@@ -243,6 +255,7 @@ class PublicOrderRequest(BaseModel):
     weight: int
     phone: Optional[str] = ""
     details: Optional[str] = ""
+    payment_method: Optional[str] = "card"
 
 @app.post("/public/quote")
 def quote_public_order(order: PublicOrderRequest):
@@ -329,6 +342,7 @@ def create_public_order(order: PublicOrderRequest, db: Session = Depends(get_db)
         details=order.details,
         tracking_number=tracking,
         price=calculated_price,
+        payment_method=order.payment_method,
         route_id=None # ¡Pedido Huérfano! Aún no tiene camión
     )
     db.add(new_stop)
@@ -523,6 +537,23 @@ def update_route_status(route_id: int, status: str, db: Session = Depends(get_db
     db.commit()
     return {"message": "Estado de la ruta actualizado", "route_id": route_id, "status": route.status}
 
+class DriverLoginRequest(BaseModel):
+    pin: str
+
+@app.post("/driver/login")
+def login_driver(req: DriverLoginRequest, db: Session = Depends(get_db)):
+    """Inicia sesión para un chofer utilizando su PIN secreto de 4 dígitos."""
+    driver = db.query(models.Driver).filter(models.Driver.pin == req.pin).first()
+    if not driver:
+        raise HTTPException(status_code=401, detail="PIN incorrecto o chofer no autorizado")
+    
+    return {
+        "id": driver.id,
+        "name": driver.name,
+        "avatar_url": driver.avatar_url,
+        "total_deliveries": driver.total_deliveries
+    }
+
 class DeliveryUpdate(BaseModel):
     delivered: bool = True
     signature_data: Optional[str] = None
@@ -534,6 +565,10 @@ def update_stop_delivery_status(stop_id: int, update_data: DeliveryUpdate, db: S
     if not stop:
         raise HTTPException(status_code=404, detail="Parada no encontrada")
         
+    if update_data.delivered and not stop.is_delivered:
+        if stop.route and stop.route.driver:
+            stop.route.driver.total_deliveries += 1
+            
     stop.is_delivered = update_data.delivered
     if update_data.signature_data:
         stop.signature_data = update_data.signature_data
