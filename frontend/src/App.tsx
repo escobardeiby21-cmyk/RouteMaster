@@ -16,6 +16,24 @@ function App() {
   const [activeTab, setActiveTab] = useState('orders');
   const [routeData, setRouteData] = useState<any>(null);
   const [activeDrivers, setActiveDrivers] = useState<any[]>([]);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    }
+  };
 
   useEffect(() => {
     if (userRole === 'admin') {
@@ -102,8 +120,20 @@ function App() {
           </p>
         </div>
 
-        <div className="relative z-10 flex gap-8 flex-col sm:flex-row">
-          <button 
+        <div className="relative z-10 flex gap-8 flex-col sm:flex-row mt-4">
+          {/* Botón de Instalación PWA (Solo visible si el navegador lo permite) */}
+          {deferredPrompt && (
+            <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 w-full flex justify-center">
+              <button 
+                onClick={handleInstallClick}
+                className="bg-gradient-to-r from-emerald-400 to-green-600 text-white font-bold px-6 py-2 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.5)] flex items-center gap-2 hover:scale-105 transition-transform animate-bounce"
+              >
+                📱 Instalar App RouteMaster
+              </button>
+            </div>
+          )}
+
+          <button  
           onClick={() => setUserRole('login')}
           className="flex-1 bg-white/5 hover:bg-white/10 backdrop-blur-sm border border-white/10 p-10 rounded-3xl transition-all shadow-xl group"
         >
@@ -129,7 +159,12 @@ function App() {
   }
 
   if (userRole === 'driver') {
-    return <DriverPortal username={loggedInUser} onLogout={() => setUserRole(null)} />;
+    return (
+      <>
+        <DriverPortal username={loggedInUser} onLogout={() => setUserRole(null)} />
+        <ChatbotWidget />
+      </>
+    );
   }
 
   if (userRole === 'guest') {

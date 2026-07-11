@@ -1,12 +1,48 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../api';
 import SignaturePad from 'react-signature-canvas';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+
+const userIcon = L.divIcon({
+  html: `<div class="w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse flex items-center justify-center"><div class="w-2 h-2 bg-white rounded-full"></div></div>`,
+  className: '',
+  iconSize: [24, 24],
+  iconAnchor: [12, 12]
+});
+
+const stopIcon = L.divIcon({
+  html: `<div class="text-3xl drop-shadow-md animate-bounce">📍</div>`,
+  className: '',
+  iconSize: [30, 30],
+  iconAnchor: [15, 30]
+});
+
+const MapUpdater = ({ center }: { center: {lat: number, lng: number} }) => {
+  const map = useMap();
+  useEffect(() => { map.flyTo(center, 13); }, [center, map]);
+  return null;
+};
 
 const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () => void }) => {
   const [route, setRoute] = useState<any>(null);
   const [completedRoute, setCompletedRoute] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
   const [loading, setLoading] = useState(true);
+  const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
+
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          setCurrentLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        (err) => console.log("Geolocalización no disponible"),
+        { enableHighAccuracy: true, maximumAge: 10000 }
+      );
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
+  }, []);
   
   // POD States
   const [showPODModal, setShowPODModal] = useState(false);
@@ -74,13 +110,15 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
     <div className="min-h-screen bg-bg-main flex flex-col font-sans pb-20">
       {/* Header Estilo App Móvil */}
       <div className="bg-white/10 p-5 border-b border-white/10 sticky top-0 z-50 shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-xl flex justify-between items-center">
-        <div>
-          <h1 className="text-white font-bold text-xl flex items-center gap-2">🚚 Chofer</h1>
-          <p className="text-emerald-400 text-sm font-mono uppercase tracking-widest">{username}</p>
+        <div className="flex items-center gap-4">
+          <div className="text-right">
+            <h1 className="text-white font-bold text-xl flex items-center justify-end gap-2">🚚 {username}</h1>
+            <p className="text-emerald-400 text-xs font-mono uppercase tracking-widest">{route?.length || 0} Pendientes | {completedRoute.length} Hechas</p>
+          </div>
+          <button onClick={onLogout} className="text-red-400 text-xs font-bold uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-xl border border-red-500/30 transition-colors h-fit">
+            Salir
+          </button>
         </div>
-        <button onClick={onLogout} className="text-red-400 text-xs font-bold uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-xl border border-red-500/30 transition-colors">
-          Salir
-        </button>
       </div>
 
       <div className="p-4 flex-1 max-w-lg mx-auto w-full">
@@ -99,6 +137,34 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
             ✅ Completadas ({completedRoute.length})
           </button>
         </div>
+
+        {/* Mapa en Vivo */}
+        {activeTab === 'pending' && (
+          <div className="w-full h-48 rounded-2xl overflow-hidden mb-6 border border-white/10 shadow-xl bg-black/40">
+            {currentLocation ? (
+              <MapContainer center={[currentLocation.lat, currentLocation.lng]} zoom={13} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+                <TileLayer url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" />
+                <MapUpdater center={{lat: currentLocation.lat, lng: currentLocation.lng}} />
+                {/* Posición del Chofer */}
+                <Marker position={[currentLocation.lat, currentLocation.lng]} icon={userIcon} />
+                {/* Paradas Pendientes */}
+                {route && route.map((order: any) => (
+                  <Marker key={order.tracking_number} position={[order.lat, order.lng]} icon={stopIcon}>
+                    <Popup className="bg-bg-card rounded shadow-xl text-white">
+                      <strong>{order.client_name}</strong><br/>
+                      {order.address}
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            ) : (
+              <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 text-xs text-center p-4">
+                <span className="text-2xl animate-spin mb-2">📡</span>
+                Buscando señal GPS...<br/>Asegúrate de permitir el acceso a tu ubicación.
+              </div>
+            )}
+          </div>
+        )}
 
         {loading ? (
           <div className="text-center text-primary mt-10 animate-pulse font-bold">📡 Conectando con el satélite...</div>
