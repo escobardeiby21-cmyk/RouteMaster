@@ -176,6 +176,7 @@ function App() {
               </div>
             </div>
           )}
+        </div>
 
         <div className="flex flex-col md:flex-row gap-6 mt-12 relative z-10 w-full max-w-4xl justify-center items-center px-4">
           <button onClick={() => setUserRole('guest')} className="flex-1 w-full p-8 bg-primary/20 border border-primary/30 rounded-3xl hover:bg-primary/30 transition-all shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:-translate-y-2 text-center backdrop-blur-sm group">
