@@ -734,3 +734,41 @@ def reassign_order(tracking_number: str, new_driver_id: int, db: Session = Depen
     stop.route_id = active_route.id
     db.commit()
     return {"success": True, "message": "Paquete reasignado exitosamente"}
+
+import re
+
+class PublicChatRequest(BaseModel):
+    message: str
+
+@app.post("/public/chat")
+def public_chat(request: PublicChatRequest, db: Session = Depends(get_db)):
+    """
+    Simulador Inteligente del Asistente Virtual para Clientes.
+    Busca números de guía en el mensaje y responde con el estado.
+    """
+    message = request.message.upper()
+    
+    # Buscar un patrón de guía tipo RM-XXXXXX
+    match = re.search(r'RM-[A-Z0-9]+', message)
+    
+    if match:
+        tracking_number = match.group(0)
+        stop = db.query(models.DeliveryStop).filter(models.DeliveryStop.tracking_number == tracking_number).first()
+        
+        if stop:
+            status = "entregado exitosamente ✅" if stop.is_delivered else ("en ruta hacia ti 🚚" if stop.route_id else "en el almacén, esperando despacho 📦")
+            driver_name = stop.route.driver.name if stop.route_id and stop.route else "aún por asignar"
+            
+            reply = f"¡Hola! Soy tu asistente logístico. He encontrado tu guía **{tracking_number}**.\n\n"
+            reply += f"Actualmente tu paquete está **{status}**.\n"
+            if stop.route_id and not stop.is_delivered:
+                reply += f"El chofer encargado es **{driver_name}**.\n"
+            return {"response": reply}
+        else:
+            return {"response": f"Lo siento, busqué en la base de datos pero no encontré ninguna guía con el número {tracking_number}. ¿Podrías verificarlo?"}
+            
+    # Respuestas generales
+    if "HOLA" in message or "BUENOS DÍAS" in message or "HAY ALGUIEN" in message:
+        return {"response": "¡Hola! Soy el asistente virtual de RouteMaster 👍. Si tienes un paquete con nosotros, escríbeme tu número de guía (ej. RM-1234) y te diré dónde está."}
+    
+    return {"response": "Para poder ayudarte mejor, por favor envíame tu número de guía que empieza por 'RM-'. ¡Estaré encantado de rastrearlo por ti!"}
