@@ -41,9 +41,11 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const [address, setAddress] = useState('');
   const [weight, setWeight] = useState(10);
   const [phone, setPhone] = useState('');
+  const [details, setDetails] = useState('');
   const [geocoding, setGeocoding] = useState(false);
   const [success, setSuccess] = useState(false);
   const [quoteData, setQuoteData] = useState<any>(null);
+  const [showNotification, setShowNotification] = useState(false);
   
   // Asistente Virtual
   const [chatOpen, setChatOpen] = useState(false);
