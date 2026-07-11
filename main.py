@@ -256,13 +256,39 @@ class PublicOrderRequest(BaseModel):
     phone: Optional[str] = ""
     details: Optional[str] = ""
     payment_method: Optional[str] = "card"
+    pickup_type: Optional[str] = "almacen"
+    origin_address: Optional[str] = None
+    origin_lat: Optional[float] = None
+    origin_lng: Optional[float] = None
+    package_type: Optional[str] = "pequeño"
+    preferred_schedule: Optional[str] = "asap"
+
+def calculate_order_price_and_distance(order: PublicOrderRequest):
+    DEPOT_LAT, DEPOT_LNG = 39.4699, -0.3774
+    
+    if order.pickup_type == 'domicilio' and order.origin_lat and order.origin_lng:
+        distance_km = calculate_haversine_distance(order.origin_lat, order.origin_lng, order.lat, order.lng)
+        base_price = 5.0 # Recargo por recolección a domicilio
+    else:
+        distance_km = calculate_haversine_distance(DEPOT_LAT, DEPOT_LNG, order.lat, order.lng)
+        base_price = 2.0
+        
+    # Recargos por tipo de paquete
+    package_surcharge = 0
+    if order.package_type == "sobre":
+        package_surcharge = 0
+    elif order.package_type == "mediano":
+        package_surcharge = 2.0
+    elif order.package_type == "refrigerado":
+        package_surcharge = 5.0
+        
+    calculated_price = base_price + package_surcharge + (order.weight * 0.1) + (distance_km * 0.05)
+    return distance_km, calculated_price
 
 @app.post("/public/quote")
 def quote_public_order(order: PublicOrderRequest):
     """Calcula el costo del envío para que el cliente lo apruebe ANTES de generarlo."""
-    DEPOT_LAT, DEPOT_LNG = 39.4699, -0.3774
-    distance_km = calculate_haversine_distance(DEPOT_LAT, DEPOT_LNG, order.lat, order.lng)
-    calculated_price = 2.0 + (order.weight * 0.1) + (distance_km * 0.05)
+    distance_km, calculated_price = calculate_order_price_and_distance(order)
     
     # Calcular fecha estimada (solo para mostrar visualmente, +1 día)
     from datetime import datetime, timedelta
@@ -284,9 +310,7 @@ def create_checkout_session(order: PublicOrderRequest):
     Crea una sesión de pago en Stripe. 
     Si no hay STRIPE_API_KEY configurada, activa el 'Simulador Inteligente' y aprueba el pago automáticamente.
     """
-    DEPOT_LAT, DEPOT_LNG = 39.4699, -0.3774
-    distance_km = calculate_haversine_distance(DEPOT_LAT, DEPOT_LNG, order.lat, order.lng)
-    calculated_price = 2.0 + (order.weight * 0.1) + (distance_km * 0.05)
+    distance_km, calculated_price = calculate_order_price_and_distance(order)
     
     # 1. MODO SIMULADOR INTELIGENTE
     if not stripe.api_key:
@@ -326,12 +350,8 @@ def create_public_order(order: PublicOrderRequest, db: Session = Depends(get_db)
     # 1. Generar Número de Guía (Tracking ID)
     tracking = f"RM-{str(uuid.uuid4())[:6].upper()}"
     
-    # 2. Calcular Distancia Satelital al Almacén (39.4699, -0.3774)
-    DEPOT_LAT, DEPOT_LNG = 39.4699, -0.3774
-    distance_km = calculate_haversine_distance(DEPOT_LAT, DEPOT_LNG, order.lat, order.lng)
-    
-    # 3. Fórmula Comercial Económica: $2 Base + ($0.1 x Kg) + ($0.05 x Km)
-    calculated_price = 2.0 + (order.weight * 0.1) + (distance_km * 0.05)
+    # 2. Calcular Distancia y Precio con el algoritmo unificado
+    distance_km, calculated_price = calculate_order_price_and_distance(order)
     
     new_stop = models.DeliveryStop(
         location_name=f"{order.client_name} - {order.address}",
@@ -343,6 +363,12 @@ def create_public_order(order: PublicOrderRequest, db: Session = Depends(get_db)
         tracking_number=tracking,
         price=calculated_price,
         payment_method=order.payment_method,
+        pickup_type=order.pickup_type,
+        origin_address=order.origin_address,
+        origin_lat=order.origin_lat,
+        origin_lng=order.origin_lng,
+        package_type=order.package_type,
+        preferred_schedule=order.preferred_schedule,
         route_id=None # ¡Pedido Huérfano! Aún no tiene camión
     )
     db.add(new_stop)

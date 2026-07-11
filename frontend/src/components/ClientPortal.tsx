@@ -47,10 +47,34 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const [quoteData, setQuoteData] = useState<any>(null);
   const [showNotification, setShowNotification] = useState(false);
   
+  // Nuevos estados híbridos
+  const [pickupType, setPickupType] = useState<'almacen' | 'domicilio'>('almacen');
+  const [packageType, setPackageType] = useState('pequeño');
+  const [preferredSchedule, setPreferredSchedule] = useState('asap');
+  const [originAddress, setOriginAddress] = useState('');
+  const [originLat, setOriginLat] = useState<number | null>(null);
+  const [originLng, setOriginLng] = useState<number | null>(null);
   
   // Verificación de Mapa (Live)
   const [tempLat, setTempLat] = useState<number>(39.4699); // Inicia en Valencia
   const [tempLng, setTempLng] = useState<number>(-0.3774);
+
+  // Live Geocoding Origen con Debounce
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (originAddress.length > 5) {
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${originAddress}, España`)}&limit=1`);
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setOriginLat(parseFloat(data[0].lat));
+            setOriginLng(parseFloat(data[0].lon));
+          }
+        } catch(e) {}
+      }
+    }, 1000);
+    return () => clearTimeout(delayDebounceFn);
+  }, [originAddress]);
   
   // Live Geocoding con Debounce
   useEffect(() => {
@@ -106,20 +130,34 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
     }
   }, []);
 
+  const getOrderData = (method = 'card') => ({
+    client_name: clientName,
+    address: address,
+    lat: tempLat,
+    lng: tempLng,
+    weight: packageType === 'sobre' ? 1 : packageType === 'pequeño' ? 2 : packageType === 'mediano' ? 10 : 50,
+    phone,
+    details,
+    payment_method: method,
+    pickup_type: pickupType,
+    origin_address: pickupType === 'domicilio' ? originAddress : null,
+    origin_lat: pickupType === 'domicilio' ? originLat : null,
+    origin_lng: pickupType === 'domicilio' ? originLng : null,
+    package_type: packageType,
+    preferred_schedule: preferredSchedule
+  });
+
   const getQuote = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!tempLat || !tempLng) return;
+    if (pickupType === 'domicilio' && (!originLat || !originLng)) {
+      alert("No pudimos ubicar tu dirección de origen. Por favor, sé más específico.");
+      return;
+    }
+    
     setGeocoding(true);
     try {
-      const res = await api.post('/public/quote', {
-        client_name: clientName,
-        address: address,
-        lat: tempLat,
-        lng: tempLng,
-        weight,
-        phone,
-        details
-      });
+      const res = await api.post('/public/quote', getOrderData());
       setQuoteData(res.data);
     } catch (err) {
       alert("Error al cotizar el envío.");
@@ -131,29 +169,17 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const handlePayment = async () => {
     if (!tempLat || !tempLng) return;
     setGeocoding(true);
-    const orderData = {
-      client_name: clientName,
-      address: address,
-      lat: tempLat,
-      lng: tempLng,
-      weight,
-      phone,
-      details
-    };
+    const orderData = getOrderData('card');
     
     try {
-      // 1. Crear sesión de pago en Stripe (o Simulador)
       const res = await api.post('/public/create-checkout-session', orderData);
-      
       if (res.data.checkout_url === "simulator") {
-        // Simulador Inteligente: Procesa el pedido de inmediato
         const finalRes = await api.post('/public/order', orderData);
         setTrackingNumber(finalRes.data.tracking_number);
         setPrice(finalRes.data.price);
         setSuccess(true);
         setTimeout(() => setShowNotification(true), 1500);
       } else {
-        // Stripe Real: Guarda datos temporalmente y redirige a la bóveda
         localStorage.setItem('pendingOrder', JSON.stringify(orderData));
         window.location.href = res.data.checkout_url;
       }
@@ -167,16 +193,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const handleCashPayment = async () => {
     if (!tempLat || !tempLng) return;
     setGeocoding(true);
-    const orderData = {
-      client_name: clientName,
-      address: address,
-      lat: tempLat,
-      lng: tempLng,
-      weight,
-      phone,
-      details,
-      payment_method: 'cash'
-    };
+    const orderData = getOrderData('cash');
     
     try {
       const finalRes = await api.post('/public/order', orderData);
@@ -293,25 +310,62 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={clientName} onChange={e=>setClientName(e.target.value)} placeholder="Ej. Juan Pérez" />
                 </div>
                 
+                <div className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-inner">
+                  <label className="text-xs text-primary mb-3 block uppercase tracking-wider font-bold">¿Cómo nos entregarás el paquete?</label>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <label className="flex-1 cursor-pointer flex items-center gap-3 bg-bg-main/50 border border-white/10 p-3 rounded-xl hover:bg-white/5 transition-colors">
+                      <input type="radio" name="pickup" checked={pickupType === 'almacen'} onChange={() => setPickupType('almacen')} className="accent-primary w-4 h-4" />
+                      <span className="text-sm text-gray-300">🏢 Lo llevo al Almacén</span>
+                    </label>
+                    <label className="flex-1 cursor-pointer flex items-center gap-3 bg-bg-main/50 border border-white/10 p-3 rounded-xl hover:bg-white/5 transition-colors">
+                      <input type="radio" name="pickup" checked={pickupType === 'domicilio'} onChange={() => setPickupType('domicilio')} className="accent-primary w-4 h-4" />
+                      <span className="text-sm text-gray-300">🛵 Recójanlo en Domicilio</span>
+                    </label>
+                  </div>
+                </div>
+
+                {pickupType === 'domicilio' && (
+                  <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl animate-[slideInDown_0.3s_ease-out]">
+                    <label className="text-xs text-blue-400 mb-1 block uppercase tracking-wider font-bold">📍 Dirección de Origen (Recolección)</label>
+                    <input required={pickupType === 'domicilio'} className="w-full px-4 py-3 bg-bg-main/50 border border-blue-500/30 rounded-xl text-white outline-none focus:border-blue-500 transition-colors" value={originAddress} onChange={e=>setOriginAddress(e.target.value)} placeholder="Ej. Tu casa u oficina..." />
+                    {originLat && <span className="text-[10px] text-emerald-400 mt-1 block font-mono">✓ Ubicación GPS Encontrada</span>}
+                  </div>
+                )}
+                
                 <div>
-                  <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Dirección Completa</label>
+                  <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">🏁 Dirección de Destino (Entrega)</label>
                   <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={address} onChange={e=>setAddress(e.target.value)} placeholder="Ej. Calle Gran Vía 15, Requena, Valencia" />
                 </div>
                 
-                {/* Mapa Interactivo Inline */}
+                {/* Mapa Interactivo Inline (Para el Destino) */}
                 <div className="h-48 w-full rounded-xl overflow-hidden border border-white/20 relative z-0 shadow-inner">
                   <MapContainer center={[tempLat, tempLng]} zoom={16} style={{ height: '100%', width: '100%' }}>
                     <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
                     <LocationMarker position={{ lat: tempLat, lng: tempLng }} setPosition={(pos: any) => { setTempLat(pos.lat); setTempLng(pos.lng); }} />
                   </MapContainer>
                   <div className="absolute bottom-2 left-2 right-2 bg-black/60 backdrop-blur-md text-white text-xs p-2 rounded-lg z-[1000] text-center border border-white/10 pointer-events-none">
-                    Arrastra el mapa si el Pin 📍 no coincide con tu casa
+                    Arrastra el mapa si el Pin 📍 no coincide con el Destino
                   </div>
                 </div>
                 
-                <div>
-                  <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Peso (kg)</label>
-                  <input required type="number" min="1" className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={weight} onChange={e=>setWeight(parseInt(e.target.value) || 0)} />
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="flex-1">
+                    <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Tipo de Paquete</label>
+                    <select value={packageType} onChange={e=>setPackageType(e.target.value)} className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors appearance-none cursor-pointer">
+                      <option value="sobre">✉️ Sobre/Docs (1 kg)</option>
+                      <option value="pequeño">📦 Pequeño (hasta 2kg)</option>
+                      <option value="mediano">🧳 Mediano (hasta 10kg)</option>
+                      <option value="refrigerado">❄️ Grande/Refri (+ $5)</option>
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Horario Preferido</label>
+                    <select value={preferredSchedule} onChange={e=>setPreferredSchedule(e.target.value)} className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors appearance-none cursor-pointer">
+                      <option value="asap">⚡ Lo antes posible</option>
+                      <option value="mañana">🌅 Mañana (8am - 12pm)</option>
+                      <option value="tarde">🌇 Tarde (12pm - 6pm)</option>
+                    </select>
+                  </div>
                 </div>
                 
                 <div>
@@ -323,8 +377,9 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Teléfono de Contacto</label>
                   <input required type="tel" className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Ej. 614 46 04 67" />
                 </div>
+                
                 <button type="submit" disabled={geocoding} className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-medium py-4 mt-2 rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all flex justify-center items-center">
-                  {geocoding ? <span className="animate-pulse">Calculando cotización...</span> : "Cotizar Envío"}
+                  {geocoding ? <span className="animate-pulse">Calculando cotización satelital...</span> : "Cotizar Envío"}
                 </button>
               </form>
             </div>

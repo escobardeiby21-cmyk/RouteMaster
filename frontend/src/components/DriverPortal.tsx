@@ -227,10 +227,30 @@ const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () 
                   <span className="text-gray-500 font-mono text-xs">#{idx + 1}</span>
                 </div>
                 
-                <p className="text-gray-300 text-sm mb-4 leading-relaxed pr-6">{order.address}</p>
+                {order.pickup_type === 'domicilio' ? (
+                  <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-3 mb-3">
+                    <strong className="text-blue-300 text-xs block mb-1 uppercase tracking-wider">📍 1. Recoger En Origen:</strong>
+                    <p className="text-white text-sm">{order.origin_address}</p>
+                  </div>
+                ) : (
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-3 mb-3">
+                    <strong className="text-gray-400 text-xs block mb-1 uppercase tracking-wider">🏢 1. Cargar en Almacén</strong>
+                    <p className="text-white text-sm">Almacén Central Valencia</p>
+                  </div>
+                )}
                 
-                <div className="flex gap-2 mb-4 text-xs font-mono">
-                  <span className="bg-black/40 text-gray-300 px-3 py-1.5 rounded-lg border border-white/5">📦 {order.weight} kg</span>
+                <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 mb-4">
+                  <strong className="text-emerald-300 text-xs block mb-1 uppercase tracking-wider">🏁 2. Entregar En Destino:</strong>
+                  <p className="text-white text-sm">{order.address}</p>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mb-4 text-xs font-mono">
+                  <span className={`px-3 py-1.5 rounded-lg border flex items-center gap-1 ${order.package_type === 'refrigerado' ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30 animate-pulse' : 'bg-black/40 text-gray-300 border-white/5'}`}>
+                    {order.package_type === 'refrigerado' ? '❄️ Camión Refri' : order.package_type === 'sobre' ? '✉️ Sobre' : '📦 ' + order.package_type}
+                  </span>
+                  <span className="bg-black/40 text-gray-300 px-3 py-1.5 rounded-lg border border-white/5 flex items-center gap-1">
+                    🕒 {order.preferred_schedule === 'mañana' ? 'Mañana' : order.preferred_schedule === 'tarde' ? 'Tarde' : 'ASAP'}
+                  </span>
                   <span className="bg-indigo-500/20 text-indigo-300 px-3 py-1.5 rounded-lg border border-indigo-500/20 flex items-center gap-1">📞 {order.phone}</span>
                 </div>
                 

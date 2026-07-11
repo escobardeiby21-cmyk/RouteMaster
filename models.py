@@ -45,6 +45,14 @@ class DeliveryStop(Base):
     phone = Column(String, default="")
     details = Column(String, default="")
     
+    # Modelo Courier
+    pickup_type = Column(String, default="almacen") # 'almacen' o 'domicilio'
+    origin_address = Column(String, nullable=True)
+    origin_lat = Column(Float, nullable=True)
+    origin_lng = Column(Float, nullable=True)
+    package_type = Column(String, default="pequeño")
+    preferred_schedule = Column(String, default="asap")
+    
     # Nuevos campos empresariales
     tracking_number = Column(String, unique=True, index=True, nullable=True)
     price = Column(Float, default=0.0)
