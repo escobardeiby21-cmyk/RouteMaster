@@ -167,7 +167,9 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
             </div>
           ) : (
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 max-w-lg w-full">
-              <button onClick={onBack} className="text-gray-400 hover:text-white mb-6 text-sm flex items-center gap-2 transition-colors">← Área Restringida (Personal)</button>
+              <button onClick={onBack} className="w-full bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 font-bold py-4 px-4 rounded-xl border border-indigo-500/30 mb-8 flex items-center justify-center gap-3 transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] hover:-translate-y-1">
+                <span className="text-2xl">⬅</span> Volver al Menú Principal
+              </button>
               <h1 className="text-3xl font-bold text-white mb-2">Portal de Clientes</h1>
               <p className="text-gray-400 mb-8">Registra la dirección de entrega de tu pedido. El mapa rastreará tu ubicación en tiempo real.</p>
               <form onSubmit={confirmOrder} className="flex flex-col gap-5">
