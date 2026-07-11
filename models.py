@@ -46,6 +46,7 @@ class DeliveryStop(Base):
     tracking_number = Column(String, unique=True, index=True, nullable=True)
     price = Column(Float, default=0.0)
     signature_data = Column(String, nullable=True) # Base64 Image
+    photo_data = Column(String, nullable=True) # Base64 Image
     
     stop_order = Column(Integer)
     is_delivered = Column(Boolean, default=False)

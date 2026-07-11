@@ -359,6 +359,29 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                     <span className="text-emerald-400 font-bold text-xl">${trackResult.price.toFixed(2)}</span>
                   </div>
                 </div>
+                {trackResult.is_delivered && (
+                  <div className="mt-6 border-t border-white/10 pt-6 space-y-6">
+                    <h4 className="text-white font-bold text-center uppercase tracking-wider text-sm flex items-center justify-center gap-2">
+                      <span className="text-green-400">✅</span> Prueba de Entrega Oficial
+                    </h4>
+                    
+                    {trackResult.photo_data && (
+                      <div>
+                        <p className="text-gray-400 text-xs mb-2 uppercase font-bold">1. Evidencia Fotográfica</p>
+                        <img src={trackResult.photo_data} alt="Foto de entrega" className="w-full h-48 object-cover rounded-xl border border-white/10 shadow-lg" />
+                      </div>
+                    )}
+                    
+                    {trackResult.signature_data && (
+                      <div>
+                        <p className="text-gray-400 text-xs mb-2 uppercase font-bold">2. Firma del Cliente</p>
+                        <div className="bg-white rounded-xl p-2 border border-white/20">
+                          <img src={trackResult.signature_data} alt="Firma" className="w-full h-24 object-contain filter contrast-125" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>

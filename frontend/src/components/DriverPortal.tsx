@@ -1,9 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../api';
+import SignaturePad from 'react-signature-canvas';
 
 const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () => void }) => {
   const [route, setRoute] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
+  // POD States
+  const [showPODModal, setShowPODModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<string | null>(null);
+  const [photoData, setPhotoData] = useState<string | null>(null);
+  const sigCanvas = useRef<any>(null);
+  const fileInputRef = useRef<any>(null);
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -21,11 +29,35 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
     return () => clearInterval(int);
   }, [username]);
 
-  const markDelivered = async (tracking_number: string) => {
+  const handlePhotoCapture = (e: any) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoData(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const markDelivered = async () => {
+    if (!selectedOrder) return;
+    
+    let signature = null;
+    if (sigCanvas.current && !sigCanvas.current.isEmpty()) {
+      signature = sigCanvas.current.getTrimmedCanvas().toDataURL('image/png');
+    }
+    
     try {
-      await api.post(`/driver/delivered/${tracking_number}`);
+      await api.post(`/driver/delivered/${selectedOrder}`, {
+        signature: signature,
+        photo: photoData
+      });
       // Actualización visual instantánea
-      setRoute((prev: any) => prev.filter((o: any) => o.tracking_number !== tracking_number));
+      setRoute((prev: any) => prev.filter((o: any) => o.tracking_number !== selectedOrder));
+      setShowPODModal(false);
+      setSelectedOrder(null);
+      setPhotoData(null);
     } catch(e) {
       alert("Error al actualizar la base de datos.");
     }
@@ -85,8 +117,8 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
                      className="flex-[1.5] bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-xl text-center flex items-center justify-center gap-2 transition-colors border border-white/10 shadow-inner">
                     🗺️ Ir en Maps
                   </a>
-                  <button onClick={() => markDelivered(order.tracking_number)} className="flex-[2] bg-gradient-to-r from-green-500 to-emerald-600 hover:from-emerald-500 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 transition-all">
-                    ✅ Entregado
+                  <button onClick={() => { setSelectedOrder(order.tracking_number); setShowPODModal(true); }} className="flex-[2] bg-gradient-to-r from-green-500 to-emerald-600 hover:from-emerald-500 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2 transition-all">
+                    ✅ Entregar
                   </button>
                 </div>
               </div>
@@ -100,6 +132,56 @@ const DriverPortal = ({ username, onLogout }: { username: string, onLogout: () =
           </div>
         )}
       </div>
+
+      {/* Modal de Prueba de Entrega (P.O.D.) */}
+      {showPODModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+          <div className="bg-bg-card w-full max-w-md rounded-3xl border border-white/10 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            <div className="p-4 bg-gradient-to-r from-primary to-blue-600 flex justify-between items-center">
+              <h3 className="text-white font-bold text-lg">Prueba de Entrega</h3>
+              <button onClick={() => { setShowPODModal(false); setSelectedOrder(null); setPhotoData(null); }} className="text-white/70 hover:text-white font-bold text-xl">✕</button>
+            </div>
+            
+            <div className="p-5 flex-1 overflow-y-auto flex flex-col gap-6">
+              {/* Foto */}
+              <div>
+                <h4 className="text-gray-300 font-bold mb-2 text-sm uppercase tracking-wider">1. Foto en Puerta</h4>
+                <input type="file" accept="image/*" capture="environment" onChange={handlePhotoCapture} ref={fileInputRef} className="hidden" />
+                
+                {photoData ? (
+                  <div className="relative rounded-xl overflow-hidden border-2 border-primary">
+                    <img src={photoData} alt="Evidencia" className="w-full h-48 object-cover" />
+                    <button onClick={() => setPhotoData(null)} className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg">✕</button>
+                  </div>
+                ) : (
+                  <button onClick={() => fileInputRef.current?.click()} className="w-full bg-white/5 hover:bg-white/10 border-2 border-dashed border-white/20 rounded-xl p-8 flex flex-col items-center justify-center gap-3 transition-colors">
+                    <span className="text-4xl">📸</span>
+                    <span className="text-gray-400 font-medium">Abrir Cámara</span>
+                  </button>
+                )}
+              </div>
+              
+              {/* Firma */}
+              <div>
+                <h4 className="text-gray-300 font-bold mb-2 text-sm uppercase tracking-wider">2. Firma del Cliente</h4>
+                <div className="bg-white rounded-xl overflow-hidden border-2 border-white/20 touch-none">
+                  <SignaturePad 
+                    ref={sigCanvas}
+                    canvasProps={{className: 'w-full h-40'}}
+                  />
+                </div>
+                <button onClick={() => sigCanvas.current?.clear()} className="text-xs text-gray-500 mt-2 hover:text-white">Borrar firma</button>
+              </div>
+            </div>
+            
+            <div className="p-4 border-t border-white/10 bg-black/20">
+              <button onClick={markDelivered} className="w-full bg-primary hover:bg-blue-600 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all text-lg">
+                Confirmar Entrega Segura
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

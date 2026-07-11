@@ -698,16 +698,22 @@ def get_orders(db: Session = Depends(get_db)):
         "weight": s.weight,
         "phone": s.phone,
         "details": s.details,
-        "tracking_number": s.tracking_number,
-        "status": "Entregado" if s.is_delivered else "Pendiente",
         "driver": s.route.driver.name if s.route and s.route.driver else None
     } for s in stops]
 
+class DeliveryProofRequest(BaseModel):
+    signature: Optional[str] = None
+    photo: Optional[str] = None
+
 @app.post("/driver/delivered/{tracking_number}")
-def mark_delivered(tracking_number: str, db: Session = Depends(get_db)):
+def driver_delivered(tracking_number: str, proof: DeliveryProofRequest, db: Session = Depends(get_db)):
     stop = db.query(models.DeliveryStop).filter(models.DeliveryStop.tracking_number == tracking_number).first()
     if stop:
         stop.is_delivered = True
+        if proof.signature:
+            stop.signature_data = proof.signature
+        if proof.photo:
+            stop.photo_data = proof.photo
         db.commit()
         return {"success": True}
     raise HTTPException(status_code=404, detail="Order not found")
