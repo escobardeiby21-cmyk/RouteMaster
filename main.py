@@ -784,6 +784,12 @@ def public_chat(request: PublicChatRequest, db: Session = Depends(get_db)):
             return {"response": f"Lo siento, revisé los servidores pero no encontré ninguna guía con el número {tracking_number}. ¿Verificaste que esté bien escrito?"}
             
     # Detección de intenciones (Keywords)
+    if "GRACIAS" in message or "EXCELENTE" in message or "GENIAL" in message or "PERFECTO" in message:
+        return {"response": "¡Es un verdadero gusto para mí servirte en nombre de la familia RouteMaster! 🚚 Trabajamos todos los días para asegurar que tus paquetes lleguen siempre a tiempo. ¡Que tengas un excelente día!"}
+        
+    if "ADIOS" in message or "ADIÓS" in message or "CHAO" in message or "HASTA LUEGO" in message:
+        return {"response": "¡Hasta pronto! Recuerda que en RouteMaster tu carga siempre está segura. Vuelve cuando necesites hacer otro envío. 👋"}
+
     if "CUANDO" in message or "LLEGA" in message or "TIEMPO" in message or "FECHA" in message:
         return {"response": "Para decirte la fecha exacta en la que llega tu envío, necesito tu número de guía (ej. RM-1234). ¡Escríbelo y te daré todos los detalles!"}
         
