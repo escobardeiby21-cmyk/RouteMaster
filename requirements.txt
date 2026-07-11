@@ -10,7 +10,7 @@ googlemaps
 ortools
 python-dotenv
 passlib
-bcrypt
+bcrypt==3.2.2
 PyJWT
 python-multipart
 psycopg2-binary
