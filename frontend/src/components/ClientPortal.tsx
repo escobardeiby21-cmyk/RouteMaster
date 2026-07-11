@@ -44,6 +44,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const [details, setDetails] = useState('');
   const [geocoding, setGeocoding] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [quoteData, setQuoteData] = useState<any>(null);
   
   // Verificación de Mapa (Live)
   const [tempLat, setTempLat] = useState<number>(39.4699); // Inicia en Valencia
@@ -82,8 +83,29 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   // Simulador Holográfico de SMS
   const [showNotification, setShowNotification] = useState(false);
 
-  const confirmOrder = async (e: React.FormEvent) => {
+  const getQuote = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!tempLat || !tempLng) return;
+    setGeocoding(true);
+    try {
+      const res = await api.post('/public/quote', {
+        client_name: clientName,
+        address: address,
+        lat: tempLat,
+        lng: tempLng,
+        weight,
+        phone,
+        details
+      });
+      setQuoteData(res.data);
+    } catch (err) {
+      alert("Error al cotizar el envío.");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
+  const confirmOrder = async () => {
     if (!tempLat || !tempLng) return;
     setGeocoding(true);
     try {
@@ -162,9 +184,40 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   <span className="text-2xl font-bold text-emerald-400">${price.toFixed(2)}</span>
                 </div>
               </div>
-              <button onClick={() => { setSuccess(false); setTrackingNumber(''); setShowNotification(false); setAddress(''); setDetails(''); setPhone(''); setWeight(10); }} className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 rounded-xl transition-all">Hacer otro envío</button>
+              <button onClick={() => { setSuccess(false); setQuoteData(null); setTrackingNumber(''); setShowNotification(false); setAddress(''); setDetails(''); setPhone(''); setWeight(10); }} className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 rounded-xl transition-all">Hacer otro envío</button>
               <button onClick={onBack} className="w-full mt-4 bg-red-500/10 hover:bg-red-500/20 text-red-300 font-bold py-3 rounded-xl border border-red-500/30 transition-colors">Volver al Menú Principal (Administrador)</button>
             </div>
+          ) : quoteData ? (
+             <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 max-w-lg w-full text-center animate-[slideInDown_0.4s_ease-out]">
+                <h2 className="text-3xl font-bold text-white mb-2">Resumen de Cotización</h2>
+                <p className="text-gray-400 mb-6">Por favor, verifica y acepta los costos de tu envío.</p>
+                
+                <div className="bg-bg-main/50 p-6 rounded-2xl border border-white/10 text-left mb-8 space-y-4 shadow-inner">
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-gray-400 text-sm">Cliente</span>
+                    <span className="text-white font-bold">{clientName}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-gray-400 text-sm">Distancia de recolección</span>
+                    <span className="text-gray-300">{quoteData.distance_km} km</span>
+                  </div>
+                  <div className="flex justify-between items-center border-b border-white/5 pb-2">
+                    <span className="text-gray-400 text-sm">Fecha Estimada de Entrega</span>
+                    <span className="text-blue-400 font-bold">{quoteData.estimated_date}</span>
+                  </div>
+                  <div className="flex justify-between items-center pt-2">
+                    <span className="text-gray-400 text-lg uppercase tracking-wider font-bold">Total a Pagar</span>
+                    <span className="text-emerald-400 font-black text-3xl">${quoteData.price.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <button onClick={() => setQuoteData(null)} disabled={geocoding} className="flex-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold py-4 rounded-xl border border-red-500/30 transition-all">Cancelar</button>
+                  <button onClick={confirmOrder} disabled={geocoding} className="flex-1 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center justify-center gap-2">
+                    {geocoding ? <span className="animate-pulse">Procesando...</span> : <>Aceptar y Enviar 🚀</>}
+                  </button>
+                </div>
+             </div>
           ) : (
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-10 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 max-w-lg w-full">
               <button onClick={onBack} className="w-full bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 font-bold py-4 px-4 rounded-xl border border-indigo-500/30 mb-8 flex items-center justify-center gap-3 transition-all shadow-[0_0_15px_rgba(99,102,241,0.2)] hover:shadow-[0_0_25px_rgba(99,102,241,0.4)] hover:-translate-y-1">
@@ -172,7 +225,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
               </button>
               <h1 className="text-3xl font-bold text-white mb-2">Portal de Clientes</h1>
               <p className="text-gray-400 mb-8">Registra la dirección de entrega de tu pedido. El mapa rastreará tu ubicación en tiempo real.</p>
-              <form onSubmit={confirmOrder} className="flex flex-col gap-5">
+              <form onSubmit={getQuote} className="flex flex-col gap-5">
                 <div>
                   <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Tu Nombre / Empresa</label>
                   <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={clientName} onChange={e=>setClientName(e.target.value)} placeholder="Ej. Juan Pérez" />
@@ -209,7 +262,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   <input required type="tel" className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="Ej. 614 46 04 67" />
                 </div>
                 <button type="submit" disabled={geocoding} className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-medium py-4 mt-2 rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all flex justify-center items-center">
-                  {geocoding ? <span className="animate-pulse">Calculando ruta de entrega...</span> : "Programar Entrega de Paquete"}
+                  {geocoding ? <span className="animate-pulse">Calculando cotización...</span> : "Cotizar Envío"}
                 </button>
               </form>
             </div>

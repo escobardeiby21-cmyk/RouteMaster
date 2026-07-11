@@ -244,6 +244,23 @@ class PublicOrderRequest(BaseModel):
     phone: Optional[str] = ""
     details: Optional[str] = ""
 
+@app.post("/public/quote")
+def quote_public_order(order: PublicOrderRequest):
+    """Calcula el costo del envío para que el cliente lo apruebe ANTES de generarlo."""
+    DEPOT_LAT, DEPOT_LNG = 39.4699, -0.3774
+    distance_km = calculate_haversine_distance(DEPOT_LAT, DEPOT_LNG, order.lat, order.lng)
+    calculated_price = 2.0 + (order.weight * 0.1) + (distance_km * 0.05)
+    
+    # Calcular fecha estimada (solo para mostrar visualmente, +1 día)
+    from datetime import datetime, timedelta
+    estimated_date = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+    
+    return {
+        "price": round(calculated_price, 2),
+        "distance_km": round(distance_km, 2),
+        "estimated_date": estimated_date
+    }
+
 @app.post("/public/order")
 def create_public_order(order: PublicOrderRequest, db: Session = Depends(get_db)):
     """Endpoint público sin JWT para que los clientes soliciten recolecciones."""
