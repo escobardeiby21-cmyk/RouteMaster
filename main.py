@@ -743,8 +743,7 @@ class PublicChatRequest(BaseModel):
 @app.post("/public/chat")
 def public_chat(request: PublicChatRequest, db: Session = Depends(get_db)):
     """
-    Simulador Inteligente del Asistente Virtual para Clientes.
-    Busca números de guía en el mensaje y responde con el estado.
+    Simulador Inteligente Avanzado del Asistente Virtual para Clientes.
     """
     message = request.message.upper()
     
@@ -756,19 +755,33 @@ def public_chat(request: PublicChatRequest, db: Session = Depends(get_db)):
         stop = db.query(models.DeliveryStop).filter(models.DeliveryStop.tracking_number == tracking_number).first()
         
         if stop:
-            status = "entregado exitosamente ✅" if stop.is_delivered else ("en ruta hacia ti 🚚" if stop.route_id else "en el almacén, esperando despacho 📦")
+            status = "entregado exitosamente ✅" if stop.is_delivered else ("en ruta hacia ti 🚚" if stop.route_id else "en el almacén, en proceso de preparación 📦")
             driver_name = stop.route.driver.name if stop.route_id and stop.route else "aún por asignar"
             
-            reply = f"¡Hola! Soy tu asistente logístico. He encontrado tu guía **{tracking_number}**.\n\n"
-            reply += f"Actualmente tu paquete está **{status}**.\n"
+            # Calcular fecha estimada (Ejemplo: al día siguiente)
+            from datetime import datetime, timedelta
+            estimated_date = (datetime.now() + timedelta(days=1)).strftime("%d/%m/%Y")
+            
+            reply = f"¡Hola! He encontrado tu guía **{tracking_number}** en nuestra bóveda.\n\n"
+            reply += f"📍 **Estado:** Actualmente tu paquete está {status}.\n"
+            
+            if not stop.is_delivered:
+                reply += f"📅 **Fecha de Entrega:** Llegará aproximadamente el {estimated_date}.\n"
+                
             if stop.route_id and not stop.is_delivered:
-                reply += f"El chofer encargado es **{driver_name}**.\n"
+                reply += f"👤 **Chofer:** {driver_name} es el encargado de tu entrega.\n"
+                
+            reply += f"💵 **Total:** ${stop.price}\n\n"
+            reply += "¿Puedo ayudarte a rastrear otra guía? Solo escríbela aquí."
             return {"response": reply}
         else:
-            return {"response": f"Lo siento, busqué en la base de datos pero no encontré ninguna guía con el número {tracking_number}. ¿Podrías verificarlo?"}
+            return {"response": f"Lo siento, revisé los servidores pero no encontré ninguna guía con el número {tracking_number}. ¿Verificaste que esté bien escrito?"}
             
-    # Respuestas generales
-    if "HOLA" in message or "BUENOS DÍAS" in message or "HAY ALGUIEN" in message:
-        return {"response": "¡Hola! Soy el asistente virtual de RouteMaster 👍. Si tienes un paquete con nosotros, escríbeme tu número de guía (ej. RM-1234) y te diré dónde está."}
+    # Detección de intenciones (Keywords)
+    if "CUANDO" in message or "LLEGA" in message or "TIEMPO" in message or "FECHA" in message:
+        return {"response": "Para decirte la fecha exacta en la que llega tu envío, necesito tu número de guía (ej. RM-1234). ¡Escríbelo y te daré todos los detalles!"}
+        
+    if "HOLA" in message or "BUENOS DÍAS" in message or "BUENAS TARDES" in message:
+        return {"response": "¡Hola! Soy el asistente de IA de RouteMaster 👍. Si quieres saber cuándo llega tu paquete, escríbeme tu número de guía (ej. RM-1234)."}
     
-    return {"response": "Para poder ayudarte mejor, por favor envíame tu número de guía que empieza por 'RM-'. ¡Estaré encantado de rastrearlo por ti!"}
+    return {"response": "No logré entenderte del todo. Para rastrear un envío o saber la fecha de entrega, por favor envíame tu número de guía (que empieza por 'RM-')."}
