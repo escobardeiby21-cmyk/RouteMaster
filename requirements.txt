@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+networkx
+sqlalchemy
+scipy
+pydantic
+requests
+folium
+googlemaps
+ortools
+python-dotenv
+passlib[bcrypt]
+python-jose[cryptography]
+python-multipart
+psycopg2-binary

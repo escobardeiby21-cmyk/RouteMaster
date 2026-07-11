@@ -1,0 +1,25 @@
+# Archivos de entorno y seguridad
+.env
+__pycache__/
+*.pyc
+
+# Base de datos local
+*.db
+*.sqlite3
+
+# Entorno virtual
+venv/
+env/
+
+# Frontend Node
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+
+# Android
+mobile-app/.gradle/
+mobile-app/build/
+mobile-app/app/build/
+mobile-app/local.properties
+mobile-app/*.iml
+mobile-app/.idea/
