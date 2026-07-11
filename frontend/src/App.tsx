@@ -17,6 +17,7 @@ function App() {
   const [routeData, setRouteData] = useState<any>(null);
   const [activeDrivers, setActiveDrivers] = useState<any[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallHelp, setShowInstallHelp] = useState(false);
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -32,6 +33,8 @@ function App() {
       if (outcome === 'accepted') {
         setDeferredPrompt(null);
       }
+    } else {
+      setShowInstallHelp(true);
     }
   };
 
@@ -121,15 +124,46 @@ function App() {
         </div>
 
         <div className="relative z-10 flex gap-8 flex-col sm:flex-row mt-4">
-          {/* Botón de Instalación PWA (Solo visible si el navegador lo permite) */}
-          {deferredPrompt && (
-            <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 w-full flex justify-center">
-              <button 
-                onClick={handleInstallClick}
-                className="bg-gradient-to-r from-emerald-400 to-green-600 text-white font-bold px-6 py-2 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.5)] flex items-center gap-2 hover:scale-105 transition-transform animate-bounce"
-              >
-                📱 Instalar App RouteMaster
-              </button>
+          {/* Botón de Instalación Universal */}
+          <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 w-full flex justify-center">
+            <button 
+              onClick={handleInstallClick}
+              className="bg-gradient-to-r from-emerald-400 to-green-600 text-white font-bold px-6 py-2 rounded-full shadow-[0_0_20px_rgba(16,185,129,0.5)] flex items-center gap-2 hover:scale-105 transition-transform animate-bounce"
+            >
+              📱 Instalar App RouteMaster
+            </button>
+          </div>
+
+          {/* Modal de Ayuda de Instalación */}
+          {showInstallHelp && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[6000] flex items-center justify-center p-4 text-left">
+              <div className="bg-bg-card max-w-md w-full border border-white/20 rounded-3xl p-6 shadow-2xl relative">
+                <button onClick={() => setShowInstallHelp(false)} className="absolute top-4 right-4 text-white/50 hover:text-white text-xl font-bold">✕</button>
+                <div className="text-5xl text-center mb-4">📲</div>
+                <h2 className="text-2xl font-bold text-white text-center mb-6">Cómo instalar la App</h2>
+                
+                <div className="space-y-4">
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-2xl">
+                    <h3 className="text-emerald-400 font-bold flex items-center gap-2 mb-2"><span className="text-xl">🍎</span> En iPhone / Safari</h3>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      1. Toca el ícono de <strong>Compartir</strong> en la barra inferior.<br/>
+                      2. Selecciona <strong>"Agregar a inicio"</strong> ➕.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-white/5 border border-white/10 p-4 rounded-2xl">
+                    <h3 className="text-blue-400 font-bold flex items-center gap-2 mb-2"><span className="text-xl">🤖</span> En Android / Chrome</h3>
+                    <p className="text-gray-300 text-sm leading-relaxed">
+                      1. Toca los <strong>3 puntitos</strong> ⋮ arriba a la derecha.<br/>
+                      2. Selecciona <strong>"Instalar aplicación"</strong> o "Agregar a inicio".
+                    </p>
+                  </div>
+                </div>
+                
+                <button onClick={() => setShowInstallHelp(false)} className="w-full bg-primary hover:bg-blue-600 text-white font-bold py-3 rounded-xl mt-6 transition-colors">
+                  ¡Entendido!
+                </button>
+              </div>
             </div>
           )}
 
