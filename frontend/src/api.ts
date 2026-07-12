@@ -1,8 +1,8 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // Si estamos desarrollando en la PC usa localhost, si estamos en Vercel usa Render
-  baseURL: import.meta.env.DEV ? 'http://localhost:8000' : 'https://routemaster-1rmz.onrender.com',
+  // Conexión directa a la computadora local para la aplicación móvil
+  baseURL: import.meta.env.DEV ? 'http://localhost:8000' : 'http://192.168.1.6:8000',
 });
 
 // Interceptor para añadir el token automáticamente a todas las peticiones

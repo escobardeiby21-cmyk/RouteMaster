@@ -49,7 +49,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const [showNotification, setShowNotification] = useState(false);
   
   // Nuevos estados híbridos
-  const [pickupType, setPickupType] = useState<'almacen' | 'domicilio'>('almacen');
+  const [pickupType, setPickupType] = useState<'almacen' | 'domicilio'>('domicilio');
   const [packageType, setPackageType] = useState('pequeño');
   const [preferredSchedule, setPreferredSchedule] = useState('asap');
   const [originAddress, setOriginAddress] = useState('');
@@ -317,27 +317,11 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={clientName} onChange={e=>setClientName(e.target.value)} placeholder="Ej. Juan Pérez" />
                 </div>
                 
-                <div className="bg-white/5 border border-white/10 p-4 rounded-xl shadow-inner">
-                  <label className="text-xs text-primary mb-3 block uppercase tracking-wider font-bold">¿Cómo nos entregarás el paquete?</label>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    <label className="flex-1 cursor-pointer flex items-center gap-3 bg-bg-main/50 border border-white/10 p-3 rounded-xl hover:bg-white/5 transition-colors">
-                      <input type="radio" name="pickup" checked={pickupType === 'almacen'} onChange={() => setPickupType('almacen')} className="accent-primary w-4 h-4" />
-                      <span className="text-sm text-gray-300">🏢 Lo llevo al Almacén</span>
-                    </label>
-                    <label className="flex-1 cursor-pointer flex items-center gap-3 bg-bg-main/50 border border-white/10 p-3 rounded-xl hover:bg-white/5 transition-colors">
-                      <input type="radio" name="pickup" checked={pickupType === 'domicilio'} onChange={() => setPickupType('domicilio')} className="accent-primary w-4 h-4" />
-                      <span className="text-sm text-gray-300">🛵 Recójanlo en Domicilio</span>
-                    </label>
-                  </div>
+                <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl animate-[slideInDown_0.3s_ease-out]">
+                  <label className="text-xs text-blue-400 mb-1 block uppercase tracking-wider font-bold">📍 Dirección de Origen (Recolección)</label>
+                  <input required className="w-full px-4 py-3 bg-bg-main/50 border border-blue-500/30 rounded-xl text-white outline-none focus:border-blue-500 transition-colors" value={originAddress} onChange={e=>setOriginAddress(e.target.value)} placeholder="Ej. Tu casa u oficina..." />
+                  {originLat && <span className="text-[10px] text-emerald-400 mt-1 block font-mono">✓ Ubicación GPS Encontrada</span>}
                 </div>
-
-                {pickupType === 'domicilio' && (
-                  <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl animate-[slideInDown_0.3s_ease-out]">
-                    <label className="text-xs text-blue-400 mb-1 block uppercase tracking-wider font-bold">📍 Dirección de Origen (Recolección)</label>
-                    <input required={pickupType === 'domicilio'} className="w-full px-4 py-3 bg-bg-main/50 border border-blue-500/30 rounded-xl text-white outline-none focus:border-blue-500 transition-colors" value={originAddress} onChange={e=>setOriginAddress(e.target.value)} placeholder="Ej. Tu casa u oficina..." />
-                    {originLat && <span className="text-[10px] text-emerald-400 mt-1 block font-mono">✓ Ubicación GPS Encontrada</span>}
-                  </div>
-                )}
                 
                 <div>
                   <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">🏁 Dirección de Destino (Entrega)</label>

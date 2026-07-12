@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import InstallAppModal from './InstallAppModal';
 
 const InstallAppButton = () => {
   const [showInstallHelp, setShowInstallHelp] = useState(false);
+
+  // Ocultar botón si ya estamos dentro de la App Nativa (Android/iOS)
+  if (Capacitor.isNativePlatform()) {
+    return null;
+  }
 
   return (
     <>
