@@ -50,6 +50,22 @@ function App() {
       <div className="flex flex-col h-screen items-center justify-center bg-bg-main p-6 gap-8 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-opacity-30"></div>
         
+        {/* Panel Superior Estratégico (Header) */}
+        <div className="fixed top-0 left-0 w-full p-4 md:px-8 flex items-center justify-between z-[5000] bg-gradient-to-b from-black/80 to-transparent">
+          <div className="flex items-center gap-3">
+            <div className="relative group w-12 h-12 md:w-16 md:h-16">
+              <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full blur opacity-40 group-hover:opacity-70 transition duration-500"></div>
+              <img 
+                src="/logo.jpg" 
+                alt="RouteMaster Mascot" 
+                className="relative w-full h-full object-cover rounded-full border-2 border-white/20 shadow-xl"
+              />
+            </div>
+            <span className="font-bold text-xl md:text-2xl tracking-widest text-white drop-shadow-lg hidden sm:block">ROUTEMASTER</span>
+          </div>
+          <InstallAppButton />
+        </div>
+        
         {/* CSS para la animación de conducción del camión del leopardo */}
         <style>{`
           @keyframes drive-truck {
@@ -104,17 +120,6 @@ function App() {
         </div>
 
         <div className="relative z-10 text-center mb-8 flex flex-col items-center px-4">
-          
-          {/* Logo Estratégico y Elegante */}
-          <div className="mb-2 mt-8 relative group animate-[slideInDown_0.6s_ease-out]">
-            <div className="absolute -inset-2 bg-gradient-to-r from-emerald-400 via-primary to-blue-500 rounded-[2.5rem] blur-xl opacity-30 group-hover:opacity-70 transition duration-1000 group-hover:duration-200"></div>
-            <img 
-              src="/logo.jpg" 
-              alt="RouteMaster Official Logo" 
-              className="relative w-48 h-48 md:w-64 md:h-64 object-cover rounded-[2rem] border-4 border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform transition duration-500 hover:scale-105 hover:-translate-y-2"
-            />
-          </div>
-
           <div className="mb-4 mt-6">
             <h1 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-white via-blue-200 to-primary bg-clip-text text-transparent mb-2 tracking-tight drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">
               RouteMaster
@@ -124,8 +129,6 @@ function App() {
             Sistema Inteligente de Optimización de Rutas y Gestión de Flotas en Tiempo Real
           </p>
         </div>
-        
-        <InstallAppButton />
 
         <div className="flex flex-col md:flex-row gap-6 mt-12 relative z-10 w-full max-w-4xl justify-center items-center px-4">
           <button onClick={() => setUserRole('guest')} className="flex-1 w-full p-8 bg-primary/20 border border-primary/30 rounded-3xl hover:bg-primary/30 transition-all shadow-[0_0_30px_rgba(99,102,241,0.3)] hover:-translate-y-2 text-center backdrop-blur-sm group">

@@ -12,14 +12,12 @@ const InstallAppButton = () => {
 
   return (
     <>
-      <div className="fixed top-4 right-4 z-[5000]">
         <button 
           onClick={() => setShowInstallHelp(true)} 
           className="flex items-center gap-2 bg-emerald-600/80 hover:bg-emerald-500 backdrop-blur-md border border-emerald-400/50 px-5 py-2.5 rounded-full text-sm font-bold text-white transition-all shadow-lg hover:scale-105"
         >
           📱 Descargar App
         </button>
-      </div>
       {showInstallHelp && <InstallAppModal onClose={() => setShowInstallHelp(false)} />}
     </>
   );
