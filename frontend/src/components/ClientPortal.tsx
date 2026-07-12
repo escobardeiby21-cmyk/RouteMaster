@@ -3,7 +3,7 @@ import api from '../api';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import InstallAppButton from './InstallAppButton';
-import AddressForm, { AddressData } from './AddressForm';
+import AddressForm, { type AddressData } from './AddressForm';
 
 const LocationMarker = ({ position, setPosition }: any) => {
   const map = useMapEvents({
