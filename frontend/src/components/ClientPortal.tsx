@@ -130,8 +130,13 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
     }
   }, []);
 
+  const formatTitleCase = (str: string) => {
+    if (!str) return '';
+    return str.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
   const getOrderData = (method = 'card') => ({
-    client_name: clientName,
+    client_name: formatTitleCase(clientName),
     address: address,
     lat: tempLat,
     lng: tempLng,
