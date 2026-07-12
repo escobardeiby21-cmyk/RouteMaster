@@ -9,6 +9,7 @@ const OrdersPanel = ({ onRouteOptimized }: { onRouteOptimized: (data: any) => vo
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [drivers, setDrivers] = useState<any[]>([]);
   const [selectedDrivers, setSelectedDrivers] = useState<number[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,15 +137,26 @@ const OrdersPanel = ({ onRouteOptimized }: { onRouteOptimized: (data: any) => vo
         {/* Tabla de Paradas Dinámicas que lee la Base de Datos */}
         <div className="w-2/3 bg-white/5 border border-border-color rounded-2xl p-6 shadow-xl flex flex-col overflow-hidden relative">
           
-          <h3 className="text-lg font-medium mb-4 text-gray-200 flex items-center gap-2">
-            <span className="relative flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </span>
-            Escuchando peticiones de clientes...
-          </h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-medium text-gray-200 flex items-center gap-2">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+              </span>
+              Paquetes sin asignar
+            </h3>
+            <div className="relative">
+              <input 
+                type="text" 
+                placeholder="🔍 Buscar por nombre, guía o tlf..." 
+                className="bg-bg-main border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-primary outline-none w-64"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
 
-          <div className="overflow-y-auto flex-1 pr-2">
+          <div className="overflow-y-auto flex-1 pr-2 custom-scrollbar">
             {pendingOrders.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-gray-500">
                 <div className="text-4xl mb-4 opacity-50">📭</div>
@@ -153,27 +165,30 @@ const OrdersPanel = ({ onRouteOptimized }: { onRouteOptimized: (data: any) => vo
               </div>
             ) : (
               <div className="space-y-3">
-                {pendingOrders.map((stop, i) => (
+                {pendingOrders.filter(stop => 
+                  stop.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                  (stop.tracking_number && stop.tracking_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                  (stop.phone && stop.phone.includes(searchTerm))
+                ).map((stop, i) => (
                   <div key={stop.id} className="bg-bg-main border border-border-color p-4 rounded-xl flex justify-between items-center hover:border-primary/50 transition-colors">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center border border-blue-500/30">
+                      <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center border border-blue-500/30 shrink-0">
                         {i + 1}
                       </div>
                       <div>
-                        <h4 className="font-bold text-gray-100">{stop.name}</h4>
-                        <p className="text-sm text-gray-400">{stop.address}</p>
+                        <h4 className="font-bold text-gray-100 text-sm">{stop.name}</h4>
+                        <p className="text-xs text-gray-400 line-clamp-1">{stop.address}</p>
                         
-                        <div className="mt-2 text-xs text-gray-500 flex flex-col gap-1">
-                          {stop.tracking_number && <span className="flex items-center gap-2 bg-indigo-500/20 text-indigo-300 w-fit px-2 py-0.5 rounded border border-indigo-500/30">📦 {stop.tracking_number}</span>}
-                          {stop.phone && <span className="flex items-center gap-2">📞 <span className="text-blue-300">{stop.phone}</span></span>}
-                          {stop.details && <span className="flex items-center gap-2">🏢 <span className="text-gray-400">{stop.details}</span></span>}
+                        <div className="mt-2 text-[10px] font-mono flex flex-wrap gap-2">
+                          {stop.tracking_number && <span className="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30">📦 {stop.tracking_number}</span>}
+                          {stop.phone && <span className="bg-white/5 text-gray-300 px-2 py-0.5 rounded border border-white/10">📞 {stop.phone}</span>}
+                          {stop.package_type && <span className="bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">🏷️ {stop.package_type}</span>}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       {stop.price && <div className="text-emerald-400 font-bold mb-1">${stop.price.toFixed(2)}</div>}
-                      <span className="px-3 py-1 bg-white/5 text-gray-300 rounded-lg text-xs font-mono border border-white/10">GPS OK</span>
-                      <p className="text-sm text-green-400 font-bold mt-2">Carga: {stop.weight} kg</p>
+                      <p className="text-xs text-green-400 font-bold mt-2">{stop.weight} kg</p>
                     </div>
                   </div>
                 ))}
@@ -182,30 +197,41 @@ const OrdersPanel = ({ onRouteOptimized }: { onRouteOptimized: (data: any) => vo
           </div>
         </div>
 
-        {/* Panel de Selección de Choferes */}
-        <div className="w-1/3 bg-white/5 border border-border-color rounded-2xl p-6 shadow-xl flex flex-col h-full">
-          <h3 className="text-lg font-medium mb-4 text-gray-200">Asignación de Flota</h3>
-          <p className="text-xs text-gray-400 mb-4">Selecciona los camiones que usarás para repartir esta tanda de pedidos. La IA dividirá el mapa entre ellos.</p>
+        {/* Panel de Selección de Choferes (Compacto) */}
+        <div className="w-1/3 bg-white/5 border border-border-color rounded-2xl p-6 shadow-xl flex flex-col">
+          <div className="mb-6">
+            <h3 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+              <span className="text-2xl">🧠</span> Despacho IA
+            </h3>
+            <p className="text-xs text-gray-400">Selecciona tu flota disponible y la Inteligencia Artificial se encargará de trazar las rutas óptimas.</p>
+          </div>
           
-          <div className="flex-1 overflow-y-auto space-y-2">
+          <div className="flex-1 overflow-y-auto space-y-2 custom-scrollbar mb-4 border border-white/5 rounded-xl p-2 bg-bg-main/50">
             {drivers.map(driver => (
-              <label key={driver.id} className={`flex items-center gap-3 p-4 rounded-xl cursor-pointer border transition-all ${selectedDrivers.includes(driver.id) ? 'bg-primary/20 border-primary' : 'bg-bg-main border-border-color hover:border-gray-500'}`}>
+              <label key={driver.id} className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer border transition-all ${selectedDrivers.includes(driver.id) ? 'bg-primary/20 border-primary shadow-[0_0_10px_rgba(99,102,241,0.2)]' : 'bg-bg-main border-border-color hover:border-gray-500'}`}>
                 <input 
                   type="checkbox" 
                   checked={selectedDrivers.includes(driver.id)}
                   onChange={() => toggleDriver(driver.id)}
-                  className="w-5 h-5 rounded text-primary focus:ring-primary bg-bg-card border-gray-600"
+                  className="w-4 h-4 rounded text-primary focus:ring-primary bg-bg-card border-gray-600"
                 />
                 <div className="flex flex-col">
-                  <span className="font-bold text-gray-100">🚚 {driver.name}</span>
-                  <span className="text-xs text-green-400">En Base - Listo</span>
+                  <span className="font-bold text-gray-100 text-sm">🚚 {driver.name}</span>
                 </div>
               </label>
             ))}
             {drivers.length === 0 && (
-              <div className="text-center text-gray-500 py-8">No hay choferes en la base de datos.</div>
+              <div className="text-center text-gray-500 py-8 text-sm">No hay choferes en la base de datos.</div>
             )}
           </div>
+
+          <button 
+            onClick={handleOptimize} 
+            disabled={loading || pendingOrders.length === 0 || selectedDrivers.length === 0}
+            className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-green-500 hover:to-emerald-400 py-4 rounded-xl font-black text-white shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+          >
+            {loading ? <span className="animate-pulse">Calculando...</span> : "⚡ Optimizar y Asignar"}
+          </button>
         </div>
       </div>
     </div>
