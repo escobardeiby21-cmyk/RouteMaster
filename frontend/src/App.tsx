@@ -12,7 +12,7 @@ import FinancePanel from './components/FinancePanel';
 import 'leaflet/dist/leaflet.css';
 
 function App() {
-  const [userRole, setUserRole] = useState<'admin' | 'guest' | 'login' | 'driver' | null>(null);
+  const [userRole, setUserRole] = useState<'admin' | 'driver' | 'guest' | 'login-admin' | 'login-driver' | null>(null);
   const [loggedInUser, setLoggedInUser] = useState('');
   const [activeTab, setActiveTab] = useState('orders');
   const [routeData, setRouteData] = useState<any>(null);
