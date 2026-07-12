@@ -50,25 +50,64 @@ function App() {
       <div className="flex flex-col h-screen items-center justify-center bg-bg-main p-6 gap-8 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-opacity-30"></div>
         
-        {/* CSS para la animación flotante del nuevo logo */}
+        {/* CSS para la animación de conducción del camión del leopardo */}
         <style>{`
-          @keyframes float-logo {
-            0% { transform: translateY(0px) scale(1); filter: drop-shadow(0 0 40px rgba(16,185,129,0.2)); }
-            50% { transform: translateY(-15px) scale(1.02); filter: drop-shadow(0 20px 50px rgba(16,185,129,0.4)); }
-            100% { transform: translateY(0px) scale(1); filter: drop-shadow(0 0 40px rgba(16,185,129,0.2)); }
+          @keyframes drive-truck {
+            0% { transform: translateX(-20vw) rotate(-2deg); }
+            25% { transform: translateX(20vw) rotate(2deg) translateY(-10px); }
+            50% { transform: translateX(50vw) rotate(-2deg); }
+            75% { transform: translateX(80vw) rotate(2deg) translateY(-10px); }
+            100% { transform: translateX(120vw) rotate(-2deg); }
           }
-          .animated-logo {
-            animation: float-logo 4s ease-in-out infinite;
+          @keyframes puff {
+            0% { opacity: 1; transform: scale(1) translate(0, 0); }
+            100% { opacity: 0; transform: scale(2.5) translate(-30px, -20px); }
+          }
+          .funny-truck-container {
+            position: absolute;
+            top: 15%;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            pointer-events: none;
+            z-index: 5;
+          }
+          .truck-body {
+            position: absolute;
+            animation: drive-truck 8s linear infinite;
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+          }
+          .smoke {
+            position: absolute;
+            bottom: 10px;
+            left: -20px;
+            font-size: 2rem;
+            animation: puff 0.8s ease-out infinite;
+          }
+          .smoke2 {
+            position: absolute;
+            bottom: 0px;
+            left: -40px;
+            font-size: 1.5rem;
+            animation: puff 0.8s ease-out infinite 0.4s;
           }
         `}</style>
 
+        {/* Leopardo conduciendo en el fondo */}
+        <div className="funny-truck-container overflow-hidden">
+          <div className="truck-body flex items-center">
+            <img src="/logo.jpg" alt="Leopardo" className="w-32 md:w-48 rounded-2xl border-2 border-primary/50 shadow-[0_0_20px_rgba(16,185,129,0.5)] object-cover" />
+            <span className="smoke">💨</span>
+            <span className="smoke2">☁️</span>
+          </div>
+        </div>
+
         <div className="relative z-10 text-center mb-8 flex flex-col items-center px-4">
-          <img 
-            src="/logo.jpg" 
-            alt="RouteMaster AI Logistics" 
-            className="w-full max-w-3xl mx-auto rounded-3xl border border-white/10 mb-8 object-cover animated-logo"
-          />
-          <h1 className="sr-only">RouteMaster</h1>
+          <div className="mb-4 mt-20">
+            <h1 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-white via-blue-200 to-primary bg-clip-text text-transparent mb-2 tracking-tight drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">
+              RouteMaster
+            </h1>
+          </div>
           <p className="text-gray-300 text-sm md:text-lg lg:text-xl font-medium tracking-wide max-w-3xl mx-auto bg-black/40 px-8 py-3 rounded-full border border-white/10 backdrop-blur-md shadow-xl text-center">
             Sistema Inteligente de Optimización de Rutas y Gestión de Flotas en Tiempo Real
           </p>
