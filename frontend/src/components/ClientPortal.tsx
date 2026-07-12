@@ -46,6 +46,12 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const [success, setSuccess] = useState(false);
   const [quoteData, setQuoteData] = useState<any>(null);
   const [showNotification, setShowNotification] = useState(false);
+  const [toastMessage, setToastMessage] = useState<{title: string, type: 'error' | 'success'} | null>(null);
+
+  const showToast = (title: string, type: 'error' | 'success' = 'error') => {
+    setToastMessage({ title, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
   
   // Nuevos estados híbridos
   const [pickupType, setPickupType] = useState<'almacen' | 'domicilio'>('domicilio');
@@ -160,7 +166,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
     e.preventDefault();
     if (!tempLat || !tempLng) return;
     if (pickupType === 'domicilio' && (!originLat || !originLng)) {
-      alert("No pudimos ubicar tu dirección de origen. Por favor, sé más específico.");
+      showToast("No pudimos ubicar tu dirección de origen. Por favor, sé más específico.");
       return;
     }
     
@@ -169,7 +175,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
       const res = await api.post('/public/quote', getOrderData());
       setQuoteData(res.data);
     } catch (err) {
-      alert("Error al cotizar el envío.");
+      showToast("Error al cotizar el envío. Intente de nuevo.");
     } finally {
       setGeocoding(false);
     }
@@ -193,7 +199,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
         window.location.href = res.data.checkout_url;
       }
     } catch (err) {
-      alert("Hubo un error contactando a la pasarela de pagos.");
+      showToast("Hubo un error contactando a la pasarela de pagos.");
     } finally {
       setGeocoding(false);
     }
@@ -211,7 +217,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
       setSuccess(true);
       setTimeout(() => setShowNotification(true), 1500);
     } catch (err) {
-      alert("Hubo un error procesando su pedido en efectivo.");
+      showToast("Hubo un error procesando su pedido en efectivo.");
     } finally {
       setGeocoding(false);
     }
@@ -485,6 +491,18 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast Elegante */}
+      {toastMessage && (
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[6000] animate-[slideInUp_0.4s_ease-out]">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] border backdrop-blur-md ${
+            toastMessage.type === 'error' ? 'bg-red-900/80 border-red-500/50 text-red-200' : 'bg-emerald-900/80 border-emerald-500/50 text-emerald-200'
+          }`}>
+            <span className="text-2xl">{toastMessage.type === 'error' ? '⚠️' : '✅'}</span>
+            <span className="font-bold">{toastMessage.title}</span>
           </div>
         </div>
       )}
