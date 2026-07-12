@@ -134,7 +134,7 @@ const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () 
   if (!driverProfile) return null;
 
   return (
-    <div className="min-h-screen bg-bg-main flex flex-col font-sans pb-20">
+    <div className="h-screen overflow-y-auto overflow-x-hidden bg-bg-main flex flex-col font-sans pb-20">
       <InstallAppButton />
       {/* Header Estilo App Móvil con Perfil */}
       <div className="bg-white/10 p-5 border-b border-white/10 sticky top-0 z-50 shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-xl flex justify-between items-center">
