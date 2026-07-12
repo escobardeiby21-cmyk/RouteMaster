@@ -14,7 +14,8 @@ const InstallAppModal = ({ onClose }: { onClose: () => void }) => {
             <h3 className="text-emerald-400 font-bold mb-2 text-lg">Descarga Directa (Android)</h3>
             <p className="text-emerald-100 text-sm mb-4">Descarga el archivo instalador nativo.</p>
             <a 
-              href="https://github.com/escobardeiby21-cmyk/RouteMaster/releases/latest/download/app-debug.apk" 
+              href="/RouteMaster.apk" 
+              download="RouteMaster.apk"
               className="inline-flex w-full justify-center items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow-lg transition-all hover:scale-105"
             >
               ⬇️ Descargar RouteMaster.apk
