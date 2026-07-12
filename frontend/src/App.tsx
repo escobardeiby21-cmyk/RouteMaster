@@ -74,36 +74,48 @@ function App() {
           }
           .truck-body {
             position: absolute;
-            animation: drive-truck 8s linear infinite;
+            font-size: 7rem;
+            animation: drive-truck 6s linear infinite;
             filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
           }
           .smoke {
             position: absolute;
-            bottom: 10px;
-            left: -20px;
-            font-size: 2rem;
+            bottom: 20px;
+            left: -30px;
+            font-size: 3rem;
             animation: puff 0.8s ease-out infinite;
           }
           .smoke2 {
             position: absolute;
-            bottom: 0px;
-            left: -40px;
-            font-size: 1.5rem;
+            bottom: 10px;
+            left: -50px;
+            font-size: 2rem;
             animation: puff 0.8s ease-out infinite 0.4s;
           }
         `}</style>
 
-        {/* Leopardo conduciendo en el fondo */}
+        {/* Camión animado en el fondo */}
         <div className="funny-truck-container overflow-hidden">
-          <div className="truck-body flex items-center">
-            <img src="/logo.jpg" alt="Leopardo" className="w-32 md:w-48 rounded-2xl border-2 border-primary/50 shadow-[0_0_20px_rgba(16,185,129,0.5)] object-cover" />
+          <div className="truck-body">
+            🚚
             <span className="smoke">💨</span>
             <span className="smoke2">☁️</span>
           </div>
         </div>
 
         <div className="relative z-10 text-center mb-8 flex flex-col items-center px-4">
-          <div className="mb-4 mt-20">
+          
+          {/* Logo Estratégico y Elegante */}
+          <div className="mb-2 mt-8 relative group animate-[slideInDown_0.6s_ease-out]">
+            <div className="absolute -inset-2 bg-gradient-to-r from-emerald-400 via-primary to-blue-500 rounded-[2.5rem] blur-xl opacity-30 group-hover:opacity-70 transition duration-1000 group-hover:duration-200"></div>
+            <img 
+              src="/logo.jpg" 
+              alt="RouteMaster Official Logo" 
+              className="relative w-48 h-48 md:w-64 md:h-64 object-cover rounded-[2rem] border-4 border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] transform transition duration-500 hover:scale-105 hover:-translate-y-2"
+            />
+          </div>
+
+          <div className="mb-4 mt-6">
             <h1 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-white via-blue-200 to-primary bg-clip-text text-transparent mb-2 tracking-tight drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">
               RouteMaster
             </h1>
