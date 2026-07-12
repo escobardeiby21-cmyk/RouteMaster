@@ -19,6 +19,12 @@ function App() {
   const [routeData, setRouteData] = useState<any>(null);
   const [activeDrivers, setActiveDrivers] = useState<any[]>([]);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [toastMessage, setToastMessage] = useState<{title: string, type: 'error' | 'success'} | null>(null);
+
+  const showToast = (title: string, type: 'error' | 'success' = 'success') => {
+    setToastMessage({ title, type });
+    setTimeout(() => setToastMessage(null), 4000);
+  };
 
   useEffect(() => {
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -272,13 +278,26 @@ function App() {
             ) : (
               <OrdersPanel onRouteOptimized={(data) => {
                 setRouteData(data);
-                alert("¡Ruta óptima trazada!");
+                showToast("¡Ruta óptima trazada y enviada a la flota!");
                 setActiveTab('map');
               }} />
             )}
           </div>
+          </div>
         </div>
       </main>
+
+      {/* Toast Elegante Principal */}
+      {toastMessage && (
+        <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-[9999] animate-[slideInUp_0.4s_ease-out]">
+          <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-[0_10px_40px_rgba(0,0,0,0.6)] border backdrop-blur-md ${
+            toastMessage.type === 'error' ? 'bg-red-900/90 border-red-500/50 text-red-200' : 'bg-emerald-900/90 border-emerald-500/50 text-emerald-200'
+          }`}>
+            <span className="text-2xl">{toastMessage.type === 'error' ? '⚠️' : '✅'}</span>
+            <span className="font-bold tracking-wide">{toastMessage.title}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

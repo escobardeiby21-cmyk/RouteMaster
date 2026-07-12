@@ -32,6 +32,8 @@ const depotPos: [number, number] = [39.4699, -0.3774]; // Almacén Central Fijo
 const MapDashboard = ({ routeData }: { routeData?: any }) => {
   const [streetRoute, setStreetRoute] = useState<[number, number][]>([]);
   const [truckPos, setTruckPos] = useState<[number, number]>(depotPos);
+  const [etaStr, setEtaStr] = useState<string>('');
+  const [distanceStr, setDistanceStr] = useState<string>('');
   
   // Estados para Firma Digital
   const [signatureModalOpen, setSignatureModalOpen] = useState(false);
@@ -71,9 +73,16 @@ const MapDashboard = ({ routeData }: { routeData?: any }) => {
         const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=full&geometries=geojson`);
         const data = await response.json();
         if (data.routes && data.routes[0]) {
-          const leafletCoords = data.routes[0].geometry.coordinates.map((coord: any) => [coord[1], coord[0]]);
+          const route = data.routes[0];
+          const leafletCoords = route.geometry.coordinates.map((coord: any) => [coord[1], coord[0]]);
           setStreetRoute(leafletCoords);
           setTruckPos(leafletCoords[0]); // Empezar al principio
+          
+          // Formatear Tiempo y Distancia
+          const durMin = Math.round(route.duration / 60);
+          const distM = route.distance;
+          setEtaStr(`${Math.floor(durMin / 60) > 0 ? `${Math.floor(durMin / 60)}h ` : ''}${durMin % 60} min`);
+          setDistanceStr(distM > 1000 ? `${(distM / 1000).toFixed(1)} km` : `${Math.round(distM)} m`);
         }
       } catch (error) {
         console.error("Error cargando OSRM", error);
@@ -151,7 +160,22 @@ const MapDashboard = ({ routeData }: { routeData?: any }) => {
   };
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full animate-[fadeIn_0.5s_ease-out]">
+      {/* ETA HUD Flotante */}
+      {etaStr && (
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] bg-black/80 text-white px-6 py-3 rounded-full border border-indigo-500/50 shadow-[0_10px_30px_rgba(99,102,241,0.5)] flex items-center gap-4 backdrop-blur-md animate-[slideInDown_0.5s_ease-out]">
+          <div className="flex items-center gap-2">
+            <span className="text-xl">⏱️</span>
+            <span className="font-bold tracking-wider">{etaStr}</span>
+          </div>
+          <div className="w-px h-5 bg-white/20"></div>
+          <div className="flex items-center gap-2 text-indigo-300">
+            <span className="text-xl">🛣️</span>
+            <span className="font-bold tracking-wider">{distanceStr}</span>
+          </div>
+        </div>
+      )}
+
       <MapHUD truckPos={truckPos} />
 
       <style>{`
