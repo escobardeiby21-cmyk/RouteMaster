@@ -161,6 +161,15 @@ def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db:
     )
     return {"access_token": access_token, "token_type": "bearer", "role": user.role}
 
+@app.get("/users/me")
+def get_me(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_user)):
+    driver = None
+    if current_user.driver_id:
+        d = db.query(models.Driver).filter(models.Driver.id == current_user.driver_id).first()
+        if d:
+            driver = {"id": d.id, "name": d.name}
+    return {"username": current_user.username, "role": current_user.role, "driver": driver}
+
 @app.post("/drivers/")
 def create_driver(name: str, phone: str = None, vehicle_plate: str = None, emergency_contact: str = None, db: Session = Depends(get_db)):
     """Endpoint para registrar un nuevo chofer con datos completos."""

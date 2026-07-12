@@ -186,13 +186,13 @@ function App() {
             <p className="text-sm text-blue-200">Cotizar y enviar un paquete.</p>
           </button>
           
-          <button onClick={() => setUserRole('driver')} className="flex-1 w-full p-8 bg-emerald-500/20 border border-emerald-500/30 rounded-3xl hover:bg-emerald-500/30 transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:-translate-y-2 text-center backdrop-blur-sm group">
+          <button onClick={() => setUserRole('login-driver')} className="flex-1 w-full p-8 bg-emerald-500/20 border border-emerald-500/30 rounded-3xl hover:bg-emerald-500/30 transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:-translate-y-2 text-center backdrop-blur-sm group">
             <div className="text-5xl md:text-6xl mb-4 group-hover:scale-110 transition-transform">🚚</div>
             <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Soy Chofer</h2>
             <p className="text-sm text-emerald-200">Ver mis entregas asignadas.</p>
           </button>
 
-          <button onClick={() => setUserRole('login')} className="flex-1 w-full p-8 bg-white/5 border border-white/10 rounded-3xl hover:bg-white/10 transition-all shadow-xl hover:-translate-y-2 text-center backdrop-blur-sm group">
+          <button onClick={() => setUserRole('login-admin')} className="flex-1 w-full p-8 bg-white/5 border border-white/10 rounded-3xl hover:bg-white/10 transition-all shadow-xl hover:-translate-y-2 text-center backdrop-blur-sm group">
             <div className="text-5xl md:text-6xl mb-4 group-hover:scale-110 transition-transform">🛡️</div>
             <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Administración</h2>
             <p className="text-sm text-gray-400">Torre de control central.</p>
@@ -203,8 +203,12 @@ function App() {
     );
   }
 
-  if (userRole === 'login') {
-    return <LoginScreen onLogin={(role, username) => { setUserRole(role as any); setLoggedInUser(username); }} onBack={() => setUserRole(null)} />;
+  if (userRole === 'login-admin') {
+    return <LoginScreen onLogin={(role, username) => { setUserRole(role as any); setLoggedInUser(username); }} onBack={() => setUserRole(null)} initialRole="admin" />;
+  }
+
+  if (userRole === 'login-driver') {
+    return <LoginScreen onLogin={(role, username) => { setUserRole(role as any); setLoggedInUser(username); }} onBack={() => setUserRole(null)} initialRole="driver" />;
   }
 
   if (userRole === 'driver') {

@@ -1,21 +1,35 @@
 import React, { useState } from 'react';
+import api from '../api';
 
-const LoginScreen = ({ onLogin, onBack }: { onLogin: (role: string, username: string) => void, onBack: () => void }) => {
+const LoginScreen = ({ onLogin, onBack, initialRole = 'admin' }: { onLogin: (role: string, username: string) => void, onBack: () => void, initialRole?: string }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const user = username.toLowerCase();
+    setError('');
+    setLoading(true);
     
-    // Simulación de validación de base de datos para la demostración
-    if (user === 'admin' && password === '1234') {
-      onLogin('admin', username);
-    } else if (user.startsWith('chofer') && password === '1234') {
-      onLogin('driver', username);
-    } else {
-      setError("Credenciales incorrectas. (Pista: usa admin/1234 o chofer_1/1234)");
+    try {
+      const formData = new URLSearchParams();
+      formData.append('username', username.toLowerCase());
+      formData.append('password', password);
+      
+      const res = await api.post('/token', formData);
+      localStorage.setItem('token', res.data.access_token);
+      
+      // El backend devuelve el rol ('admin' o 'driver')
+      onLogin(res.data.role, username.toLowerCase());
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        setError("Usuario o contraseña incorrectos.");
+      } else {
+        setError("Error de conexión con el servidor.");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -35,8 +49,8 @@ const LoginScreen = ({ onLogin, onBack }: { onLogin: (role: string, username: st
         
         <form onSubmit={handleLogin} className="flex flex-col gap-5">
           <div>
-            <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Usuario</label>
-            <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={username} onChange={e=>setUsername(e.target.value)} placeholder="Ej. admin o chofer_1" />
+            <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Usuario ({initialRole === 'driver' ? 'Chofer' : 'Administrador'})</label>
+            <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={username} onChange={e=>setUsername(e.target.value)} placeholder={initialRole === 'driver' ? "Ej. chofer_1" : "Ej. admin"} />
           </div>
           <div>
             <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Contraseña</label>
@@ -45,8 +59,8 @@ const LoginScreen = ({ onLogin, onBack }: { onLogin: (role: string, username: st
           
           {error && <div className="text-red-400 text-sm text-center bg-red-500/10 p-2 rounded border border-red-500/20">{error}</div>}
           
-          <button type="submit" className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-4 mt-2 rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all">
-            Ingresar al Sistema
+          <button disabled={loading} type="submit" className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-4 mt-2 rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.4)] transition-all flex justify-center">
+            {loading ? <span className="animate-pulse">Validando...</span> : "Ingresar al Sistema"}
           </button>
         </form>
 

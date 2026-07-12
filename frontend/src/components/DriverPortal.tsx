@@ -26,14 +26,22 @@ const MapUpdater = ({ center }: { center: {lat: number, lng: number} }) => {
 
 const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () => void }) => {
   const [driverProfile, setDriverProfile] = useState<any>(null);
-  const [pin, setPin] = useState('');
-  const [loginError, setLoginError] = useState('');
   
   const [route, setRoute] = useState<any>(null);
   const [completedRoute, setCompletedRoute] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
-  const [loading, setLoading] = useState(false); // Initially false because they must login first
+  const [loading, setLoading] = useState(true);
   const [currentLocation, setCurrentLocation] = useState<{lat: number, lng: number} | null>(null);
+
+  useEffect(() => {
+    api.get('/users/me').then(res => {
+      if (res.data.driver) {
+        setDriverProfile(res.data.driver);
+      } else {
+        onLogout();
+      }
+    }).catch(() => onLogout());
+  }, [onLogout]);
 
   useEffect(() => {
     if ('geolocation' in navigator) {
@@ -55,17 +63,7 @@ const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () 
   const sigCanvas = useRef<any>(null);
   const fileInputRef = useRef<any>(null);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-    try {
-      const res = await api.post('/driver/login', { pin });
-      setDriverProfile(res.data);
-      setLoading(true);
-    } catch (err) {
-      setLoginError("PIN incorrecto o acceso denegado.");
-    }
-  };
+  // Removed old PIN handleLogin
 
   useEffect(() => {
     const fetchRoute = async () => {
@@ -124,19 +122,9 @@ const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () 
 
   if (!driverProfile) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-4 bg-bg-main min-h-screen relative">
-        <div className="absolute inset-0 bg-gradient-to-tr from-emerald-900/20 to-bg-main opacity-80"></div>
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-[0_0_40px_rgba(0,0,0,0.5)] relative z-10 w-full max-w-sm text-center">
-          <button onClick={onLogout} className="text-gray-400 hover:text-white mb-6 text-sm flex items-center gap-2 transition-colors mx-auto">← Volver</button>
-          <div className="text-6xl mb-4">🚚</div>
-          <h2 className="text-2xl font-bold text-white mb-2">Bóveda de Choferes</h2>
-          <p className="text-gray-400 text-sm mb-8">Ingresa tu PIN de 4 dígitos para acceder a tus rutas y perfil.</p>
-          <form onSubmit={handleLogin}>
-            <input required type="password" maxLength={4} className="w-full text-center text-4xl tracking-[1em] px-4 py-4 bg-black/50 border border-white/20 rounded-2xl text-emerald-400 outline-none focus:border-emerald-500 transition-colors mb-4 font-mono shadow-inner" value={pin} onChange={e=>setPin(e.target.value)} placeholder="••••" />
-            {loginError && <div className="text-red-400 text-xs bg-red-500/10 p-2 rounded mb-4">{loginError}</div>}
-            <button type="submit" className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all">Desbloquear</button>
-          </form>
-        </div>
+      <div className="flex-1 flex flex-col items-center justify-center bg-bg-card h-screen">
+         <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+         <p className="mt-4 text-primary font-bold animate-pulse">Autenticando Chofer...</p>
       </div>
     );
   }
