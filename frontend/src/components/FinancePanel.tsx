@@ -55,13 +55,15 @@ const FinancePanel = () => {
     <div className="flex flex-col lg:flex-row gap-6 p-6 h-full w-full">
       
       {/* Columna Izquierda: Tarifas Dinámicas */}
-      <div className="flex-[1] bg-bg-card border border-border-color rounded-3xl p-6 shadow-xl relative overflow-hidden">
+      <div className="flex-[1] bg-bg-card border border-border-color rounded-3xl p-6 shadow-xl relative overflow-hidden flex flex-col">
         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
-        <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3 relative z-10">
-          <span className="text-3xl">⚙️</span> Simulador de Tarifas
-        </h2>
+        <div className="mb-6 shrink-0">
+          <h2 className="text-2xl font-bold text-white flex items-center gap-3 relative z-10">
+            <span className="text-3xl">⚙️</span> Simulador de Tarifas
+          </h2>
+        </div>
         
-        <form onSubmit={handleSaveSettings} className="flex flex-col gap-5 relative z-10">
+        <form onSubmit={handleSaveSettings} className="flex flex-col gap-5 relative z-10 overflow-y-auto custom-scrollbar pr-2 pb-2 flex-1">
           <div className="bg-bg-main/50 p-4 rounded-2xl border border-white/5">
             <h3 className="text-xs text-primary font-bold uppercase tracking-wider mb-3">Tarifa Base (Fija)</h3>
             <div className="grid grid-cols-2 gap-4">
