@@ -3,6 +3,7 @@ import api from '../api';
 import SignaturePad from 'react-signature-canvas';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import InstallAppButton from './InstallAppButton';
 
 const userIcon = L.divIcon({
   html: `<div class="w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_15px_rgba(59,130,246,0.8)] animate-pulse flex items-center justify-center"><div class="w-2 h-2 bg-white rounded-full"></div></div>`,
@@ -132,6 +133,7 @@ const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () 
 
   return (
     <div className="min-h-screen bg-bg-main flex flex-col font-sans pb-20">
+      <InstallAppButton />
       {/* Header Estilo App Móvil con Perfil */}
       <div className="bg-white/10 p-5 border-b border-white/10 sticky top-0 z-50 shadow-[0_10px_30px_rgba(0,0,0,0.5)] backdrop-blur-xl flex justify-between items-center">
         <div className="flex items-center gap-4">

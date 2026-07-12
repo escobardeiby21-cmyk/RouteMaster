@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import InstallAppButton from './InstallAppButton';
 
 const LocationMarker = ({ position, setPosition }: any) => {
   const map = useMapEvents({
@@ -232,6 +233,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   return (
     <div className="flex-1 flex flex-col items-center justify-start py-12 px-4 bg-bg-main bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] relative overflow-y-auto h-screen w-full">
       <div className="absolute inset-0 bg-gradient-to-br from-bg-main via-bg-main to-primary/10 opacity-90"></div>
+      <InstallAppButton />
       
       <div className="z-10 w-full max-w-lg">
         <div className="flex bg-white/5 rounded-2xl p-1 border border-white/10 mb-8 backdrop-blur-sm">
