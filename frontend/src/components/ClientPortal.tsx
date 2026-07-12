@@ -3,6 +3,7 @@ import api from '../api';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import InstallAppButton from './InstallAppButton';
+import AddressForm, { AddressData } from './AddressForm';
 
 const LocationMarker = ({ position, setPosition }: any) => {
   const map = useMapEvents({
@@ -39,10 +40,8 @@ const LocationMarker = ({ position, setPosition }: any) => {
 
 const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const [clientName, setClientName] = useState('');
-  const [address, setAddress] = useState('');
   const [weight, setWeight] = useState(10);
   const [phone, setPhone] = useState('');
-  const [details, setDetails] = useState('');
   const [geocoding, setGeocoding] = useState(false);
   const [success, setSuccess] = useState(false);
   const [quoteData, setQuoteData] = useState<any>(null);
@@ -52,7 +51,11 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   const [pickupType, setPickupType] = useState<'almacen' | 'domicilio'>('domicilio');
   const [packageType, setPackageType] = useState('pequeño');
   const [preferredSchedule, setPreferredSchedule] = useState('asap');
-  const [originAddress, setOriginAddress] = useState('');
+  
+  // Estados complejos de dirección
+  const [originData, setOriginData] = useState<AddressData>({ geocodeAddress: '', details: '' });
+  const [destData, setDestData] = useState<AddressData>({ geocodeAddress: '', details: '' });
+
   const [originLat, setOriginLat] = useState<number | null>(null);
   const [originLng, setOriginLng] = useState<number | null>(null);
   
@@ -63,9 +66,9 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
   // Live Geocoding Origen con Debounce
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (originAddress.length > 5) {
+      if (originData.geocodeAddress.length > 5) {
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${originAddress}, España`)}&limit=1`);
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${originData.geocodeAddress}, España`)}&limit=1`);
           const data = await res.json();
           if (data && data.length > 0) {
             setOriginLat(parseFloat(data[0].lat));
@@ -75,14 +78,14 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
       }
     }, 1000);
     return () => clearTimeout(delayDebounceFn);
-  }, [originAddress]);
+  }, [originData.geocodeAddress]);
   
-  // Live Geocoding con Debounce
+  // Live Geocoding Destino con Debounce
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (address.length > 5) {
+      if (destData.geocodeAddress.length > 5) {
         try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${address}, España`)}&limit=1`);
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(`${destData.geocodeAddress}, España`)}&limit=1`);
           const data = await res.json();
           if (data && data.length > 0) {
             setTempLat(parseFloat(data[0].lat));
@@ -92,10 +95,10 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
           console.error("Error geocoding", e);
         }
       }
-    }, 1000); // 1 segundo de retraso para no bloquear el API
+    }, 1000);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [address]);
+  }, [destData.geocodeAddress]);
   
   // Nuevos estados para Pricing y Tracking
   const [activeTab, setActiveTab] = useState<'order' | 'track'>('order');
@@ -138,15 +141,15 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
 
   const getOrderData = (method = 'card') => ({
     client_name: formatTitleCase(clientName),
-    address: address,
+    address: destData.geocodeAddress,
     lat: tempLat,
     lng: tempLng,
     weight: packageType === 'sobre' ? 1 : packageType === 'pequeño' ? 2 : packageType === 'mediano' ? 10 : 50,
     phone,
-    details,
+    details: `Origen Extras: [${originData.details}] | Destino Extras: [${destData.details}]`,
     payment_method: method,
     pickup_type: pickupType,
-    origin_address: pickupType === 'domicilio' ? originAddress : null,
+    origin_address: pickupType === 'domicilio' ? originData.geocodeAddress : null,
     origin_lat: pickupType === 'domicilio' ? originLat : null,
     origin_lng: pickupType === 'domicilio' ? originLng : null,
     package_type: packageType,
@@ -267,7 +270,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   <span className="text-2xl font-bold text-emerald-400">${price.toFixed(2)}</span>
                 </div>
               </div>
-              <button onClick={() => { setSuccess(false); setQuoteData(null); setTrackingNumber(''); setShowNotification(false); setAddress(''); setDetails(''); setPhone(''); setWeight(10); }} className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 rounded-xl transition-all">Hacer otro envío</button>
+              <button onClick={() => { setSuccess(false); setQuoteData(null); setTrackingNumber(''); setShowNotification(false); setOriginData({geocodeAddress:'', details:''}); setDestData({geocodeAddress:'', details:''}); setPhone(''); setWeight(10); }} className="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 rounded-xl transition-all">Hacer otro envío</button>
               <button onClick={onBack} className="w-full mt-4 bg-red-500/10 hover:bg-red-500/20 text-red-300 font-bold py-3 rounded-xl border border-red-500/30 transition-colors">Volver al Menú Principal (Administrador)</button>
             </div>
           ) : quoteData ? (
@@ -317,23 +320,20 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={clientName} onChange={e=>setClientName(e.target.value)} placeholder="Ej. Juan Pérez" />
                 </div>
                 
-                <div className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-xl animate-[slideInDown_0.3s_ease-out] shadow-inner">
-                  <h3 className="text-blue-400 font-bold mb-3 border-b border-blue-500/30 pb-2 flex items-center gap-2">
-                    <span className="text-xl">📍</span> Paso 1: Origen de Recolección
-                  </h3>
-                  <label className="text-xs text-blue-300 mb-1 block uppercase tracking-wider font-bold">¿Dónde recogemos tu paquete?</label>
-                  <input required className="w-full px-4 py-3 bg-bg-main/50 border border-blue-500/30 rounded-xl text-white outline-none focus:border-blue-500 transition-colors shadow-sm" value={originAddress} onChange={e=>setOriginAddress(e.target.value)} placeholder="Ej. Calle Primavera 123, Ciudad..." />
-                  {originLat && <span className="text-[11px] text-emerald-400 mt-2 block font-mono bg-emerald-500/10 p-1.5 rounded inline-block">✓ Señal GPS de Origen Confirmada</span>}
-                </div>
+                <AddressForm 
+                  title="Paso 1: Origen de Recolección" 
+                  icon="📍" 
+                  accentColor="blue"
+                  onChange={setOriginData}
+                />
+                {originLat && <span className="text-[11px] text-emerald-400 -mt-2 mb-2 block font-mono bg-emerald-500/10 p-1.5 rounded text-center">✓ Señal GPS de Origen Confirmada</span>}
                 
-                <div className="bg-purple-500/10 border border-purple-500/20 p-5 rounded-xl shadow-inner mt-2">
-                  <h3 className="text-purple-400 font-bold mb-3 border-b border-purple-500/30 pb-2 flex items-center gap-2">
-                    <span className="text-xl">🏁</span> Paso 2: Destino Final
-                  </h3>
-                  <label className="text-xs text-purple-300 mb-1 block uppercase tracking-wider font-bold">¿A dónde llevamos tu paquete?</label>
-                  <input required className="w-full px-4 py-3 bg-bg-main/50 border border-purple-500/30 rounded-xl text-white outline-none focus:border-purple-500 transition-colors shadow-sm" value={address} onChange={e=>setAddress(e.target.value)} placeholder="Ej. Avenida Central 456, Ciudad..." />
-                  <p className="text-[10px] text-gray-400 mt-2">Verifica la exactitud del destino en el mapa satelital de abajo ↓</p>
-                </div>
+                <AddressForm 
+                  title="Paso 2: Destino Final" 
+                  icon="🏁" 
+                  accentColor="purple"
+                  onChange={setDestData}
+                />
                 
                 {/* Mapa Interactivo Inline (Para el Destino) */}
                 <div className="h-48 w-full rounded-xl overflow-hidden border border-white/20 relative z-0 shadow-inner">
@@ -366,10 +366,7 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   </div>
                 </div>
                 
-                <div>
-                  <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Piso, Puerta o Indicaciones Extras</label>
-                  <input className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={details} onChange={e=>setDetails(e.target.value)} placeholder="Ej. Piso 3. Dejar en recepción." />
-                </div>
+                {/* Los detalles extra ahora están dentro del componente AddressForm */}
 
                 <div>
                   <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">Teléfono de Contacto</label>
