@@ -103,12 +103,13 @@ function App() {
           </div>
         </div>
 
-        <div className="relative z-10 text-center mb-8 flex flex-col items-center">
-          <div className="mb-4">
-            <h1 className="text-6xl md:text-7xl font-black bg-gradient-to-r from-white via-blue-200 to-primary bg-clip-text text-transparent mb-2 tracking-tight drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]">
-              RouteMaster
-            </h1>
-          </div>
+        <div className="relative z-10 text-center mb-8 flex flex-col items-center px-4">
+          <img 
+            src="/logo.jpg" 
+            alt="RouteMaster AI Logistics" 
+            className="w-full max-w-3xl mx-auto rounded-3xl shadow-[0_0_40px_rgba(16,185,129,0.2)] border border-white/10 mb-8 animate-[slideInDown_0.6s_ease-out] object-cover"
+          />
+          <h1 className="sr-only">RouteMaster</h1>
           <p className="text-gray-300 text-sm md:text-lg lg:text-xl font-medium tracking-wide max-w-3xl mx-auto bg-black/40 px-8 py-3 rounded-full border border-white/10 backdrop-blur-md shadow-xl text-center">
             Sistema Inteligente de Optimización de Rutas y Gestión de Flotas en Tiempo Real
           </p>

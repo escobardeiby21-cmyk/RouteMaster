@@ -16,14 +16,14 @@ export default defineConfig({
         name: "RouteMaster AI Logistics",
         icons: [
           {
-            src: "mascot.jpg",
+            src: "icon-192.png",
             sizes: "192x192",
-            type: "image/jpeg"
+            type: "image/png"
           },
           {
-            src: "mascot.jpg",
+            src: "icon-512.png",
             sizes: "512x512",
-            type: "image/jpeg"
+            type: "image/png"
           }
         ],
         start_url: "/",
