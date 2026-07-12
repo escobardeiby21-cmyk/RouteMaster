@@ -317,15 +317,22 @@ const ClientPortal = ({ onBack }: { onBack: () => void }) => {
                   <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={clientName} onChange={e=>setClientName(e.target.value)} placeholder="Ej. Juan Pérez" />
                 </div>
                 
-                <div className="bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl animate-[slideInDown_0.3s_ease-out]">
-                  <label className="text-xs text-blue-400 mb-1 block uppercase tracking-wider font-bold">📍 Dirección de Origen (Recolección)</label>
-                  <input required className="w-full px-4 py-3 bg-bg-main/50 border border-blue-500/30 rounded-xl text-white outline-none focus:border-blue-500 transition-colors" value={originAddress} onChange={e=>setOriginAddress(e.target.value)} placeholder="Ej. Tu casa u oficina..." />
-                  {originLat && <span className="text-[10px] text-emerald-400 mt-1 block font-mono">✓ Ubicación GPS Encontrada</span>}
+                <div className="bg-blue-500/10 border border-blue-500/20 p-5 rounded-xl animate-[slideInDown_0.3s_ease-out] shadow-inner">
+                  <h3 className="text-blue-400 font-bold mb-3 border-b border-blue-500/30 pb-2 flex items-center gap-2">
+                    <span className="text-xl">📍</span> Paso 1: Origen de Recolección
+                  </h3>
+                  <label className="text-xs text-blue-300 mb-1 block uppercase tracking-wider font-bold">¿Dónde recogemos tu paquete?</label>
+                  <input required className="w-full px-4 py-3 bg-bg-main/50 border border-blue-500/30 rounded-xl text-white outline-none focus:border-blue-500 transition-colors shadow-sm" value={originAddress} onChange={e=>setOriginAddress(e.target.value)} placeholder="Ej. Calle Primavera 123, Ciudad..." />
+                  {originLat && <span className="text-[11px] text-emerald-400 mt-2 block font-mono bg-emerald-500/10 p-1.5 rounded inline-block">✓ Señal GPS de Origen Confirmada</span>}
                 </div>
                 
-                <div>
-                  <label className="text-xs text-primary mb-1 block uppercase tracking-wider font-bold">🏁 Dirección de Destino (Entrega)</label>
-                  <input required className="w-full px-4 py-3 bg-bg-main/50 border border-white/10 rounded-xl text-white outline-none focus:border-primary transition-colors" value={address} onChange={e=>setAddress(e.target.value)} placeholder="Ej. Calle Gran Vía 15, Requena, Valencia" />
+                <div className="bg-purple-500/10 border border-purple-500/20 p-5 rounded-xl shadow-inner mt-2">
+                  <h3 className="text-purple-400 font-bold mb-3 border-b border-purple-500/30 pb-2 flex items-center gap-2">
+                    <span className="text-xl">🏁</span> Paso 2: Destino Final
+                  </h3>
+                  <label className="text-xs text-purple-300 mb-1 block uppercase tracking-wider font-bold">¿A dónde llevamos tu paquete?</label>
+                  <input required className="w-full px-4 py-3 bg-bg-main/50 border border-purple-500/30 rounded-xl text-white outline-none focus:border-purple-500 transition-colors shadow-sm" value={address} onChange={e=>setAddress(e.target.value)} placeholder="Ej. Avenida Central 456, Ciudad..." />
+                  <p className="text-[10px] text-gray-400 mt-2">Verifica la exactitud del destino en el mapa satelital de abajo ↓</p>
                 </div>
                 
                 {/* Mapa Interactivo Inline (Para el Destino) */}
