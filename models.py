@@ -63,3 +63,13 @@ class DeliveryStop(Base):
     stop_order = Column(Integer)
     is_delivered = Column(Boolean, default=False)
     route = relationship("Route", back_populates="stops")
+
+class SystemSettings(Base):
+    __tablename__ = "system_settings"
+    id = Column(Integer, primary_key=True, index=True)
+    base_price_domicilio = Column(Float, default=5.0)
+    base_price_almacen = Column(Float, default=2.0)
+    price_per_kg = Column(Float, default=0.1)
+    price_per_km = Column(Float, default=0.05)
+    surcharge_mediano = Column(Float, default=2.0)
+    surcharge_refrigerado = Column(Float, default=5.0)

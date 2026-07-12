@@ -8,6 +8,7 @@ import ClientPortal from './components/ClientPortal';
 import LoginScreen from './components/LoginScreen';
 import DriverPortal from './components/DriverPortal';
 import ChatbotWidget from './components/ChatbotWidget';
+import FinancePanel from './components/FinancePanel';
 import 'leaflet/dist/leaflet.css';
 
 function App() {
@@ -258,6 +259,12 @@ function App() {
             >
               <span className="text-lg">👥</span> Choferes
             </button>
+            <button 
+              onClick={() => setActiveTab('finance')}
+              className={`w-full text-left px-4 py-3 rounded-lg transition-all flex items-center gap-3 ${activeTab === 'finance' ? 'bg-primary/20 text-primary border border-primary/30' : 'text-gray-400 hover:bg-white/5 hover:text-white'}`}
+            >
+              <span className="text-lg">💰</span> Finanzas
+            </button>
           </nav>
 
           <div className="mt-8">
@@ -305,6 +312,8 @@ function App() {
               <MapDashboard routeData={routeData} />
             ) : activeTab === 'fleet' ? (
               <FleetPanel />
+            ) : activeTab === 'finance' ? (
+              <FinancePanel />
             ) : (
               <OrdersPanel onRouteOptimized={(data) => {
                 setRouteData(data);

@@ -263,32 +263,40 @@ class PublicOrderRequest(BaseModel):
     package_type: Optional[str] = "pequeño"
     preferred_schedule: Optional[str] = "asap"
 
-def calculate_order_price_and_distance(order: PublicOrderRequest):
+def calculate_order_price_and_distance(order: PublicOrderRequest, db: Session):
     DEPOT_LAT, DEPOT_LNG = 39.4699, -0.3774
+    
+    # Obtener configuración o crearla si no existe
+    settings = db.query(models.SystemSettings).first()
+    if not settings:
+        settings = models.SystemSettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
     
     if order.pickup_type == 'domicilio' and order.origin_lat and order.origin_lng:
         distance_km = calculate_haversine_distance(order.origin_lat, order.origin_lng, order.lat, order.lng)
-        base_price = 5.0 # Recargo por recolección a domicilio
+        base_price = settings.base_price_domicilio
     else:
         distance_km = calculate_haversine_distance(DEPOT_LAT, DEPOT_LNG, order.lat, order.lng)
-        base_price = 2.0
+        base_price = settings.base_price_almacen
         
     # Recargos por tipo de paquete
     package_surcharge = 0
     if order.package_type == "sobre":
         package_surcharge = 0
     elif order.package_type == "mediano":
-        package_surcharge = 2.0
+        package_surcharge = settings.surcharge_mediano
     elif order.package_type == "refrigerado":
-        package_surcharge = 5.0
+        package_surcharge = settings.surcharge_refrigerado
         
-    calculated_price = base_price + package_surcharge + (order.weight * 0.1) + (distance_km * 0.05)
+    calculated_price = base_price + package_surcharge + (order.weight * settings.price_per_kg) + (distance_km * settings.price_per_km)
     return distance_km, calculated_price
 
 @app.post("/public/quote")
-def quote_public_order(order: PublicOrderRequest):
+def quote_public_order(order: PublicOrderRequest, db: Session = Depends(get_db)):
     """Calcula el costo del envío para que el cliente lo apruebe ANTES de generarlo."""
-    distance_km, calculated_price = calculate_order_price_and_distance(order)
+    distance_km, calculated_price = calculate_order_price_and_distance(order, db)
     
     # Calcular fecha estimada (solo para mostrar visualmente, +1 día)
     from datetime import datetime, timedelta
@@ -351,7 +359,7 @@ def create_public_order(order: PublicOrderRequest, db: Session = Depends(get_db)
     tracking = f"RM-{str(uuid.uuid4())[:6].upper()}"
     
     # 2. Calcular Distancia y Precio con el algoritmo unificado
-    distance_km, calculated_price = calculate_order_price_and_distance(order)
+    distance_km, calculated_price = calculate_order_price_and_distance(order, db)
     
     new_stop = models.DeliveryStop(
         location_name=f"{order.client_name} - {order.address}",
@@ -378,6 +386,60 @@ def create_public_order(order: PublicOrderRequest, db: Session = Depends(get_db)
         "tracking_number": tracking,
         "price": calculated_price
     }
+
+class SettingsUpdate(BaseModel):
+    base_price_domicilio: float
+    base_price_almacen: float
+    price_per_kg: float
+    price_per_km: float
+    surcharge_mediano: float
+    surcharge_refrigerado: float
+
+@app.get("/admin/settings")
+def get_settings(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_admin)):
+    settings = db.query(models.SystemSettings).first()
+    if not settings:
+        settings = models.SystemSettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    return settings
+
+@app.put("/admin/settings")
+def update_settings(payload: SettingsUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_admin)):
+    settings = db.query(models.SystemSettings).first()
+    if not settings:
+        settings = models.SystemSettings()
+        db.add(settings)
+    
+    for key, value in payload.model_dump().items():
+        setattr(settings, key, value)
+        
+    db.commit()
+    return {"success": True, "message": "Tarifas dinámicas actualizadas exitosamente"}
+
+@app.get("/admin/crm")
+def get_crm_clients(db: Session = Depends(get_db), current_user: models.User = Depends(auth.get_current_admin)):
+    """Agrupa a los clientes por número de teléfono para calcular su valor total (LTV)."""
+    stops = db.query(models.DeliveryStop).filter(models.DeliveryStop.phone != "", models.DeliveryStop.phone != None).all()
+    
+    clients = {}
+    for s in stops:
+        if s.phone not in clients:
+            # Extraer solo el nombre sin la dirección
+            name = s.location_name.split(" - ")[0] if " - " in s.location_name else s.location_name
+            clients[s.phone] = {
+                "phone": s.phone,
+                "name": name,
+                "total_orders": 0,
+                "total_spent": 0.0
+            }
+        
+        clients[s.phone]["total_orders"] += 1
+        if s.price:
+            clients[s.phone]["total_spent"] += float(s.price)
+            
+    return list(clients.values())
 
 @app.get("/all_stops")
 def get_all_stops_for_accounting(db: Session = Depends(get_db)):
