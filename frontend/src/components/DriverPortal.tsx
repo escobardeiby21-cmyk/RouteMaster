@@ -122,7 +122,7 @@ const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () 
     }
   };
 
-  if (!driverProfile) {
+  if (loading) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-bg-card h-screen">
          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
@@ -130,6 +130,8 @@ const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () 
       </div>
     );
   }
+
+  if (!driverProfile) return null;
 
   return (
     <div className="min-h-screen bg-bg-main flex flex-col font-sans pb-20">
@@ -150,7 +152,13 @@ const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () 
             </p>
           </div>
         </div>
-        <button onClick={() => setDriverProfile(null)} className="text-red-400 text-xs font-bold uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-xl border border-red-500/30 transition-colors h-fit">
+        <button 
+          onClick={() => {
+            localStorage.removeItem('token');
+            onLogout();
+          }} 
+          className="text-red-400 text-xs font-bold uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 px-4 py-2 rounded-xl border border-red-500/30 transition-colors h-fit"
+        >
           Salir
         </button>
       </div>
