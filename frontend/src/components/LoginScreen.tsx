@@ -66,13 +66,12 @@ const LoginScreen = ({ onLogin, onBack, initialRole = 'admin' }: { onLogin: (rol
 
         {/* Sección de Descarga Directa (Sideloading) para Choferes */}
         <div className="mt-8 text-center border-t border-white/10 pt-6">
-          <p className="text-gray-400 text-xs mb-3">¿Eres chofer y aún no tienes la aplicación?</p>
+          <p className="text-gray-400 text-xs mb-3">¿Eres chofer y aún no tienes la aplicación nativa?</p>
           <a 
-            href="/RouteMaster-Oficial.apk" 
-            download 
+            href="https://github.com/escobardeiby21-cmyk/RouteMaster/releases/latest/download/app-debug.apk" 
             className="inline-flex items-center gap-2 bg-emerald-500/10 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 px-6 py-3 rounded-xl text-sm font-bold transition-all hover:scale-105"
           >
-            ⬇️ Instalar RouteMaster App
+            ⬇️ Descargar RouteMaster.apk
           </a>
         </div>
       </div>
