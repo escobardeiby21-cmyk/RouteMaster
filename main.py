@@ -60,6 +60,20 @@ def create_default_admin():
         
     db.commit()
 
+    # Sincronizar todos los choferes existentes con el sistema de Usuarios Seguros
+    all_drivers = db.query(models.Driver).all()
+    for d in all_drivers:
+        user = db.query(models.User).filter(models.User.driver_id == d.id).first()
+        if not user:
+            new_user = models.User(
+                username=f"chofer_{d.id}",
+                hashed_password=auth.get_password_hash("1234"),
+                role="driver",
+                driver_id=d.id
+            )
+            db.add(new_user)
+    db.commit()
+
 # Configurar CORS para permitir que la web pública (Vercel) se conecte
 app.add_middleware(
     CORSMiddleware,
