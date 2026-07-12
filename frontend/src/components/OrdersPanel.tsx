@@ -145,14 +145,23 @@ const OrdersPanel = ({ onRouteOptimized }: { onRouteOptimized: (data: any) => vo
               </span>
               Paquetes sin asignar
             </h3>
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="🔍 Buscar por nombre, guía o tlf..." 
-                className="bg-bg-main border border-white/10 rounded-lg px-4 py-2 text-sm text-white focus:border-primary outline-none w-64"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
+            <div className="flex gap-2">
+              <button 
+                onClick={() => window.open('/?tab=order', '_blank')}
+                className="bg-indigo-600 hover:bg-indigo-500 text-white border border-indigo-400/50 rounded-lg px-3 py-2 text-sm font-bold shadow-lg flex items-center gap-2 transition-all"
+                title="Abre el formulario público para registrar un paquete recibido físicamente en el almacén."
+              >
+                ➕ Recepción Manual
+              </button>
+              <div className="relative">
+                <input 
+                  type="text" 
+                  placeholder="🔍 Buscar..." 
+                  className="bg-bg-main border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-primary outline-none w-48"
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
@@ -170,25 +179,23 @@ const OrdersPanel = ({ onRouteOptimized }: { onRouteOptimized: (data: any) => vo
                   (stop.tracking_number && stop.tracking_number.toLowerCase().includes(searchTerm.toLowerCase())) ||
                   (stop.phone && stop.phone.includes(searchTerm))
                 ).map((stop, i) => (
-                  <div key={stop.id} className="bg-bg-main border border-border-color p-4 rounded-xl flex justify-between items-center hover:border-primary/50 transition-colors">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center border border-blue-500/30 shrink-0">
+                  <div key={stop.id} className="bg-bg-main/60 border border-white/10 p-2.5 rounded-lg flex justify-between items-center hover:border-primary/50 transition-colors shadow-sm">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <div className="w-6 h-6 rounded bg-blue-500/20 text-blue-400 font-bold flex items-center justify-center text-xs shrink-0">
                         {i + 1}
                       </div>
-                      <div>
-                        <h4 className="font-bold text-gray-100 text-sm">{stop.name}</h4>
-                        <p className="text-xs text-gray-400 line-clamp-1">{stop.address}</p>
+                      <div className="truncate">
+                        <h4 className="font-bold text-gray-200 text-sm truncate">{stop.name} <span className="text-[10px] text-gray-500 font-normal ml-1 truncate">{stop.address}</span></h4>
                         
-                        <div className="mt-2 text-[10px] font-mono flex flex-wrap gap-2">
-                          {stop.tracking_number && <span className="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30">📦 {stop.tracking_number}</span>}
-                          {stop.phone && <span className="bg-white/5 text-gray-300 px-2 py-0.5 rounded border border-white/10">📞 {stop.phone}</span>}
-                          {stop.package_type && <span className="bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded border border-emerald-500/20 uppercase">🏷️ {stop.package_type}</span>}
+                        <div className="mt-1 text-[10px] font-mono flex flex-wrap gap-1.5">
+                          {stop.tracking_number && <span className="bg-indigo-500/20 text-indigo-300 px-1.5 rounded border border-indigo-500/30">📦 {stop.tracking_number}</span>}
+                          {stop.phone && <span className="bg-white/5 text-gray-300 px-1.5 rounded border border-white/10">📞 {stop.phone}</span>}
+                          <span className="bg-emerald-500/10 text-emerald-400 px-1.5 rounded border border-emerald-500/20">{stop.weight} kg</span>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      {stop.price && <div className="text-emerald-400 font-bold mb-1">${stop.price.toFixed(2)}</div>}
-                      <p className="text-xs text-green-400 font-bold mt-2">{stop.weight} kg</p>
+                    <div className="text-right shrink-0 ml-2">
+                      {stop.price && <div className="text-emerald-400 font-bold text-sm">${stop.price.toFixed(2)}</div>}
                     </div>
                   </div>
                 ))}
