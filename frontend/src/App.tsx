@@ -27,9 +27,7 @@ function App() {
     });
   }, []);
 
-      setShowInstallHelp(true);
-    }
-  };
+
 
   useEffect(() => {
     if (userRole === 'admin') {
