@@ -58,8 +58,8 @@ function App() {
         
         {/* Panel Superior Estratégico (Header) */}
         <div className="fixed top-0 left-0 w-full p-4 md:px-8 flex items-center justify-between z-[5000] bg-gradient-to-b from-black/80 to-transparent">
-          <div className="flex items-center gap-3">
-            <div className="relative group w-12 h-12 md:w-16 md:h-16">
+          <div className="flex items-center gap-4">
+            <div className="relative group w-20 h-20 md:w-28 md:h-28">
               <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-full blur opacity-40 group-hover:opacity-70 transition duration-500"></div>
               <img 
                 src="/logo.jpg" 
