@@ -40,7 +40,8 @@ const DriverPortal = ({ username, onLogout }: { username?: string, onLogout: () 
       } else {
         onLogout();
       }
-    }).catch(() => onLogout());
+    }).catch(() => onLogout())
+      .finally(() => setLoading(false));
   }, [onLogout]);
 
   useEffect(() => {
