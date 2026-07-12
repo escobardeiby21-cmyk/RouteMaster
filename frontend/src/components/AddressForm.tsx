@@ -13,6 +13,8 @@ interface Props {
 }
 
 const AddressForm: React.FC<Props> = ({ title, icon, onChange, accentColor }) => {
+  const [provincia, setProvincia] = useState('');
+  const [ciudad, setCiudad] = useState('');
   const [via, setVia] = useState('');
   const [numero, setNumero] = useState('');
   const [km, setKm] = useState('');
@@ -25,11 +27,17 @@ const AddressForm: React.FC<Props> = ({ title, icon, onChange, accentColor }) =>
   const [otros, setOtros] = useState('');
 
   useEffect(() => {
-    // String limpio para GPS (solo via, numero, y opcionalmente municipio)
-    const geocode = `${via} ${numero}`.trim();
+    // String limpio para GPS (solo via, numero, ciudad y provincia)
+    const geocodeParts = [];
+    if (via) geocodeParts.push(`${via} ${numero}`.trim());
+    if (ciudad) geocodeParts.push(ciudad);
+    if (provincia) geocodeParts.push(provincia);
+    const geocode = geocodeParts.join(', ');
     
     // String detallado para el chofer
     const parts = [];
+    if (provincia) parts.push(`Provincia: ${provincia}`);
+    if (ciudad) parts.push(`Ciudad: ${ciudad}`);
     if (km) parts.push(`Km: ${km}`);
     if (hm) parts.push(`Hm: ${hm}`);
     if (bloque) parts.push(`Bloque: ${bloque}`);
@@ -45,7 +53,7 @@ const AddressForm: React.FC<Props> = ({ title, icon, onChange, accentColor }) =>
       geocodeAddress: geocode,
       details: detailsStr
     });
-  }, [via, numero, km, hm, bloque, portal, escalera, planta, puerta, otros]);
+  }, [provincia, ciudad, via, numero, km, hm, bloque, portal, escalera, planta, puerta, otros]);
 
   const borderColor = accentColor === 'blue' ? 'border-blue-500/30' : 'border-purple-500/30';
   const bgColor = accentColor === 'blue' ? 'bg-blue-500/10' : 'bg-purple-500/10';
@@ -65,12 +73,36 @@ const AddressForm: React.FC<Props> = ({ title, icon, onChange, accentColor }) =>
       </h3>
       
       <div className={`border ${borderColor} rounded-lg overflow-hidden bg-bg-main/40`}>
+        {/* Provincia y Ciudad */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-white/10">
+          <div>
+            <InputHeader label="Provincia / Estado" />
+            <input 
+              className={`w-full bg-transparent px-3 py-2 text-white outline-none text-sm ${inputFocus}`}
+              placeholder="Ej. Madrid"
+              value={provincia}
+              onChange={e => setProvincia(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <InputHeader label="Ciudad / Municipio" />
+            <input 
+              className={`w-full bg-transparent px-3 py-2 text-white outline-none text-sm ${inputFocus}`}
+              placeholder="Ej. Alcalá de Henares"
+              value={ciudad}
+              onChange={e => setCiudad(e.target.value)}
+              required
+            />
+          </div>
+        </div>
+
         {/* Vía */}
-        <div>
+        <div className={`border-t ${borderColor}`}>
           <InputHeader label="Vía (Calle, Avenida, Plaza...)" />
           <input 
             className={`w-full bg-transparent px-3 py-2 text-white outline-none text-sm ${inputFocus} border-b ${borderColor}`}
-            placeholder="Ej. CALLE CONCERTISTA GIL OROZCO"
+            placeholder="Ej. Gran Vía"
             value={via}
             onChange={e => setVia(e.target.value)}
             required
