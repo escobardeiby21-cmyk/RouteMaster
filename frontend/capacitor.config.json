@@ -1,0 +1,6 @@
+{
+  "appId": "com.routemaster.app",
+  "appName": "RouteMaster",
+  "webDir": "dist",
+  "bundledWebRuntime": false
+}
