@@ -77,7 +77,7 @@ def create_default_admin():
 # Configurar CORS para permitir que la web pública (Vercel) se conecte
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173", "https://route-master-lac.vercel.app"],
+    allow_origins=["http://localhost", "capacitor://localhost", "http://localhost:5173", "http://127.0.0.1:5173", "https://route-master-lac.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -954,3 +954,75 @@ def public_chat(request: PublicChatRequest, db: Session = Depends(get_db)):
         return {"response": "¡Hola! Soy el asistente de IA de RouteMaster 👍. Puedes preguntarme por nuestras políticas de envío, o si quieres rastrear un paquete, solo escríbeme tu número de guía (ej. RM-1234)."}
     
     return {"response": "No logré entenderte del todo. Puedes preguntarme sobre nuestras reglas de envío, políticas de privacidad, o para rastrear un paquete simplemente envíame tu número de guía (ej. 'RM-1234')."}
+
+# --- ENDPOINTS DEL PORTAL DE CLIENTES ---
+
+class QuoteRequest(BaseModel):
+    client_name: str
+    address: str
+    lat: float
+    lng: float
+    weight: float
+    phone: str
+    details: str
+    payment_method: str
+    pickup_type: str
+    origin_address: Optional[str] = None
+    origin_lat: Optional[float] = None
+    origin_lng: Optional[float] = None
+    package_type: str
+    preferred_schedule: str
+
+@app.post("/public/quote")
+def get_quote(req: QuoteRequest):
+    # Calcular precio basado en peso y tipo (Simulado simple)
+    base_price = 10.0
+    weight_cost = req.weight * 0.5
+    type_cost = 5.0 if req.package_type == "refrigerado" else 0.0
+    total_price = base_price + weight_cost + type_cost
+    
+    return {
+        "price": round(total_price, 2),
+        "estimated_days": 1 if req.preferred_schedule == "asap" else 2
+    }
+
+@app.post("/public/create-checkout-session")
+def create_checkout(req: QuoteRequest):
+    return {"checkout_url": "simulator"}
+
+@app.post("/public/order")
+def create_client_order(req: QuoteRequest, db: Session = Depends(get_db)):
+    base_price = 10.0 + (req.weight * 0.5) + (5.0 if req.package_type == "refrigerado" else 0.0)
+    tracking = f"RM-{uuid.uuid4().hex[:6].upper()}"
+    
+    new_stop = models.DeliveryStop(
+        location_name=f"{req.client_name} - {req.address}",
+        lat=req.lat,
+        lng=req.lng,
+        weight=req.weight,
+        phone=req.phone,
+        details=req.details,
+        tracking_number=tracking,
+        price=round(base_price, 2),
+        is_delivered=False
+    )
+    db.add(new_stop)
+    db.commit()
+    return {"tracking_number": tracking, "price": round(base_price, 2)}
+
+@app.get("/public/track/{tracking_number}")
+def track_order(tracking_number: str, db: Session = Depends(get_db)):
+    stop = db.query(models.DeliveryStop).filter(models.DeliveryStop.tracking_number == tracking_number).first()
+    if not stop:
+        raise HTTPException(status_code=404, detail="Not found")
+        
+    return {
+        "tracking_number": stop.tracking_number,
+        "status": "Entregado" if stop.is_delivered else ("En Ruta" if stop.route_id else "Procesando"),
+        "driver": stop.route.driver.name if stop.route and stop.route.driver else "Sin asignar",
+        "price": stop.price,
+        "is_delivered": stop.is_delivered,
+        "photo_data": stop.photo_data,
+        "signature_data": stop.signature_data
+    }
+
